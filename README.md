@@ -7,7 +7,9 @@
     sudo n stable
     
     pip install flask flask_cors qiskit
-    
+
+    npm install
+
     npm start
     
     cd server/api
