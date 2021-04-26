@@ -14,6 +14,7 @@ class Composer extends React.Component {
       width: 0,
       height: 0,
       code: ["OPENQASM 2.0;\ninclude \"qelib1.inc\";\n\nqreg q[3];\ncreg q[3];\n"],
+      result: null,
     };
   }
 
@@ -86,7 +87,8 @@ class Composer extends React.Component {
   }
 
   generateCode = (gates) => {
-    const qasm = ["OPENQASM 2.0;\ninclude \"qelib1.inc\";\n\nqreg q[3];\ncreg q[3];\n"];
+    const qubitCount = gates.length;
+    const qasm = [`OPENQASM 2.0;\ninclude "qelib1.inc";\n\nqreg q[${qubitCount}];\ncreg q[${qubitCount}];\n`];
 
     let maxLen = 0;
     gates.forEach(qubit => {
@@ -111,8 +113,26 @@ class Composer extends React.Component {
     return qasm.join('\n');
   }
 
-  runSimulation = () => {
+  addQubit = () => {
+    this.setState({gates: this.state.gates.concat([[]])});
     
+  }
+
+  runSimulation = () => {
+    fetch('/api/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        code: this.state.gates,
+      })
+    }).then(response => {
+        response.text().then(text => {
+          this.setState({result: text});
+        })
+      }
+    );
   }
   render() {
     return (
@@ -131,7 +151,8 @@ class Composer extends React.Component {
           </div>
           }
           <Circuit handleDrag={this.handleDrag} dragged={this.state.clicked} gates={this.state.gates} notifyDimension={this.setDimension}
-            width={this.state.width} getIndex={this.getIndex}/>
+            width={this.state.width} getIndex={this.getIndex} addQubit={this.addQubit}/>
+          {this.state.result && <Histogram result={this.state.result}/>}
           </div>
           <div className="w-2/6 ml-4" ><textarea className="w-full h-full" value={this.state.code} readOnly></textarea></div>
           </div>
@@ -203,6 +224,9 @@ class Circuit extends React.Component {
         return (<line key={i} x1={20} x2={endX} y1={40+50*i} y2={40+50*i} strokeWidth={0.5} stroke="black"/>);
       })}
       {gates}
+      <text className="material-icons-outlined select-none" x={5} y={40+ 50*this.props.gates.length - 10} onClick={this.props.addQubit}>
+        add_circle_outlined
+      </text>
       </svg>);
   }
 }
@@ -243,10 +267,19 @@ function Menu() {
   );
 }
 
+
 function Title() {
   return (<form className="border-b-2">
     <input type="text" defaultValue="Untitled circuit" className="p-2"></input>
   </form>)
+}
+
+function Histogram(props) {
+  return (
+    <div className="w-1/2 align-middle flex items-center justify-center">
+  <img src={'data:image/png;base64,'+ props.result} alt=""/>
+    </div>
+  );
 }
 
 export default Composer;
