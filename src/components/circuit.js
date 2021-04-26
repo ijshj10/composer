@@ -18,7 +18,8 @@ class Composer extends React.Component {
     };
   }
 
-  getIndex = (clientX, clientY) => {
+  // Drag and drop highlight
+  getIndex = (clientX, clientY) => { 
     const x = clientX - this.state.left;
     const y = clientY - this.state.top;
     let i;
@@ -45,6 +46,7 @@ class Composer extends React.Component {
   }
 
 
+  // Drag
   handleDrag = (event, kind, i,j ) => {
     if(i !== undefined) {
       let qubit = this.state.gates[i].slice(0,j).concat(this.state.gates[i].slice(j+1));
@@ -77,6 +79,8 @@ class Composer extends React.Component {
     window.addEventListener("mouseup", drop);
   }
 
+  
+  // svg size
   setDimension = (rect) => {
     this.setState({
       top: rect.top,
@@ -85,6 +89,8 @@ class Composer extends React.Component {
       height: rect.height,
     });
   }
+
+  // openqasm generation
 
   generateCode = (gates) => {
     const qubitCount = gates.length;
@@ -113,6 +119,7 @@ class Composer extends React.Component {
     return qasm.join('\n');
   }
 
+
   addQubit = () => {
     this.setState({gates: this.state.gates.concat([[]])});
     
@@ -134,6 +141,7 @@ class Composer extends React.Component {
       }
     );
   }
+  
   render() {
     return (
     <div className="flex flex-row">
