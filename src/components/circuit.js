@@ -1,5 +1,6 @@
 import React from "react";
 import {GATES, SIZE} from '../constants';
+import {Sidebar, SidebarOpened} from './sidebar';
 
 class Composer extends React.Component {
   constructor(props) {
@@ -15,6 +16,7 @@ class Composer extends React.Component {
       height: 0,
       code: ["OPENQASM 2.0;\ninclude \"qelib1.inc\";\n\nqreg q[3];\ncreg q[3];\n"],
       result: null,
+      sidebarSelected: -1,
     };
   }
 
@@ -141,11 +143,16 @@ class Composer extends React.Component {
       }
     );
   }
-  
+
+  handleSidebarClick = (clicked) => {
+    this.setState({sidebarSelected: clicked});
+  }
+
   render() {
     return (
     <div className="flex flex-row">
-      <Sidebar runSimulation={this.runSimulation}/>
+      <Sidebar handleClick={this.handleSidebarClick}/>
+      {(this.state.sidebarSelected != -1) && <SidebarOpened kind={this.state.sidebarSelected} />}
       <div className="flex flex-col space-y-0 flex-grow">
         <Menu />
         <Title />
@@ -253,15 +260,6 @@ function GatePannel(props) {
 }
 
 
-function Sidebar(props) {
-  return (
-  <div className="flex flex-col space-y-4 w-12 border-r-2 h-screen">
-  <button><span className="material-icons-outlined mt-4">folder</span></button>
-  <button><span className="material-icons-outlined">file_download</span></button>
-  <button><span className="material-icons-outlined">file_upload</span></button>
-  <button onClick={props.runSimulation}><span className="material-icons-outlined">play_arrow</span></button>
-  </div>);
-}
 
 function Menu() {
   return (<div className="border-b-2 flex flex-row">
