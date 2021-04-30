@@ -41,7 +41,7 @@ export function SidebarOpened(props) {
 }
 
 function requireLogin(props) {
-  
+  return (<div></div>)
 }
 
  
