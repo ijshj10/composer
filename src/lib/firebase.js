@@ -16,4 +16,4 @@ const firebase = Firebase.initializeApp(config);
 const { FieldValue } = Firebase.firestore;
 
 
-export default {firebase, FieldValue};
+export {firebase, FieldValue};

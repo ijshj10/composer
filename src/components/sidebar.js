@@ -1,6 +1,6 @@
 import React from 'react';
 
-const SELECTED_COLOR = " bg-gray-200";
+const SELECTED_COLOR = "bg-gray-200 ";
 
 export class Sidebar extends React.Component {
   constructor(props) {
@@ -11,7 +11,7 @@ export class Sidebar extends React.Component {
   }
 
   handleClick = (clicked) => {
-    if(this.state.clicked == clicked) {
+    if(this.state.clicked === clicked) {
       clicked = -1;
     }
     this.setState({clicked});
@@ -22,8 +22,8 @@ export class Sidebar extends React.Component {
       return (
       <div className={"flex flex-col border-r-2 h-screen w-12"}>
         {items.map((item, i) => {
-          return (<button className={"pt-4 pb-4 focus:outline-none material-icons-outlined" +
-           (this.state.clicked == i ? SELECTED_COLOR : "")}
+          return (<button className={"pt-4 pb-4 focus:outline-none material-icons-outlined " + "hover:" + SELECTED_COLOR + " " +
+           (this.state.clicked === i ? (SELECTED_COLOR) : "")}
           onClick={() => this.handleClick(i)}>{item}</button>);
         })}
       </div>
@@ -37,11 +37,5 @@ export function SidebarOpened(props) {
 
 
 
-  return (<div className={"w-96" + SELECTED_COLOR}>{heading}</div>);
+  return (<div className={"w-96 " + SELECTED_COLOR}>{heading}</div>);
 }
-
-function requireLogin(props) {
-  return (<div></div>)
-}
-
- 

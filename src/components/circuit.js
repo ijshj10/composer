@@ -107,7 +107,7 @@ class Composer extends React.Component {
       gates.forEach((qubit, i) => {
         if(qubit[j] !== undefined) {
           let instr;
-          if(qubit[j] == 'M') {
+          if(qubit[j] === 'M') {
             instr = `measure q[${i}] -> c[${i}];`;
           } else {
             instr = `${qubit[j].toLowerCase()} q[${i}];`;
@@ -152,14 +152,14 @@ class Composer extends React.Component {
     return (
     <div className="flex flex-row">
       <Sidebar handleClick={this.handleSidebarClick}/>
-      {(this.state.sidebarSelected != -1) && <SidebarOpened kind={this.state.sidebarSelected} />}
+      {(this.state.sidebarSelected !== -1) && <SidebarOpened kind={this.state.sidebarSelected} />}
       <div className="flex flex-col space-y-0 flex-grow">
         <Menu />
         <Title />
         <div className="flex flex-row flex-grow"> 
           <div className="flex flex-col border-r-2 flex-grow">
           <GatePannel handleDrag={this.handleDrag}/>
-          {this.state.clicked != null && 
+          {this.state.clicked !== null && 
           <div className="absolute gate"
             style={{top: this.state.clicked.y - 24, left:this.state.clicked.x - 24}}>
             {this.state.clicked.kind}
@@ -200,7 +200,7 @@ class Circuit extends React.Component {
 
     let dropI, dropJ;
 
-    if(this.props.dragged != null) {
+    if(this.props.dragged !== null) {
       [dropI, dropJ] = this.props.getIndex(this.props.dragged.x, this.props.dragged.y);
     }
 
