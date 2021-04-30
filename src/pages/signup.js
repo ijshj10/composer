@@ -36,7 +36,7 @@ export default function SignUp() {
               userId: createdUserResult.user.uid,
               username: username.toLowerCase(),
               emailAddress: emailAddress.toLowerCase(),
-              dateCreated: Date.now()
+              permission: 0,
             });
           history.push(ROUTES.MAIN);
       }
