@@ -6,7 +6,7 @@ import {firebase} from '../lib/firebase';
 import {useHistory} from 'react-router';
 
 export default function Header() {
-  const {user: loggedInuser} = useContext(UserContext);
+  const {user: loggedInUser} = useContext(UserContext);
   const history = useHistory();
   return (
     <header className="h-16 bg-white border-b border-gray">
@@ -19,7 +19,7 @@ export default function Header() {
           </h1>
         </div>  
         <div className="text-center flex items-center align-items space-x-8 pr-4 ">
-          {loggedInuser ? (
+          {loggedInUser ? (
               <div className="cursor-pointer hover:text-gray-900 ">
               <button 
                 type="button"
