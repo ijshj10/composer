@@ -12,6 +12,7 @@ export default function SignUp() {
   const [username, setUsername] = useState('');
   const [emailAddress, setEmailAddress] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
 
   const [error, setError] = useState('');
   const isInvalid = username == '' || password === '' || emailAddress === '';
@@ -19,7 +20,9 @@ export default function SignUp() {
   const handleSignUp = async (event) => {
     event.preventDefault();
     const usernameExists = await doesUsernameExist(username);
-    if(!usernameExists) {
+    if(password != passwordConfirm) {
+      setError('Those passwords didn’t match. Try again.');
+    } else if(!usernameExists) {
       try {
         const createdUserResult = await firebase
           .auth()
@@ -74,7 +77,10 @@ return (
 					className="text-sm w-full mr-3 py-5 px-4 h-2 border rounded mb-2" 
 					onChange={({target}) => setPassword(target.value)}
 					value={password}/>
-
+          <input type="password" placeholder="Confirm"
+          className="text-sm w-full mr-3 py-5 px-4 h-2 border rounded mb-2" 
+					onChange={({target}) => setPasswordConfirm(target.value)}
+					value={passwordConfirm}/>
 					<button disabled={isInvalid} type="submit" className={`bg-blue-500 text-white rounded h-8 font-bold w-full ${isInvalid && 'opacity-50'}`}>
 						Sign up
 					</button>
