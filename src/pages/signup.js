@@ -28,20 +28,20 @@ export default function SignUp() {
           .auth()
           .createUserWithEmailAndPassword(emailAddress, password);
         
-          await createdUserResult.user.updateProfile({
-            displayName: username
-          });
+        await createdUserResult.user.updateProfile({
+          displayName: username
+        });
 
-          await firebase
-            .firestore()
-            .collection('users')
-            .add({
-              userId: createdUserResult.user.uid,
-              username: username.toLowerCase(),
-              emailAddress: emailAddress.toLowerCase(),
-              permission: 0,
-            });
-          history.push(ROUTES.MAIN);
+        await firebase
+          .firestore()
+          .collection('users')
+          .add({
+            userId: createdUserResult.user.uid,
+            username: username.toLowerCase(),
+            emailAddress: emailAddress.toLowerCase(),
+            permission: 0,
+          });
+        history.push(ROUTES.MAIN);
       }
       catch(error) {
         setUsername('');
