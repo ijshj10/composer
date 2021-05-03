@@ -1,19 +1,16 @@
 import flask
-import sys
+import sys, os
 from flask import Flask
 from flask import request, Response
 from flask_cors import CORS
-from qiskit_sim import run
+from .qiskit_sim import run
 
 
 app = Flask(__name__)
 CORS(app)
 
-@app.route('/api/', methods=["POST"])
+@app.route('/api/', methods=["POST", "GET"])
 def hello():
-    return run(request.json['code'])
-
-if __name__ == '__main__':    
-    app.run(host='0.0.0.0')
-
-
+    if request.method == 'POST':
+        return run(request.json['code'])
+    return 'hello'
