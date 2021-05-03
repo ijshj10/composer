@@ -3,9 +3,9 @@
 @tailwind utilities;
 
 .gate {
-    @apply w-8 h-8 border-2 border-black text-xs font-extrabold flex items-center justify-center m-1 select-none bg-white;
+  @apply w-8 h-8 border-2 border-black text-xs font-extrabold flex items-center justify-center m-1 select-none bg-white;
 }
 
 .menu {
-    @apply w-16 h-12;
+  @apply w-16 h-12;
 }

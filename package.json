@@ -18,7 +18,8 @@
     "start": "craco start",
     "build": "craco build",
     "test": "craco test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "prepare": "husky install"
   },
   "eslintConfig": {
     "extends": [
@@ -41,9 +42,15 @@
   "devDependencies": {
     "@tailwindcss/postcss7-compat": "^2.1.0",
     "autoprefixer": "^9.8.6",
+    "husky": "^6.0.0",
     "json-server": "^0.16.3",
+    "lint-staged": "^10.5.4",
     "postcss": "^7.0.35",
+    "prettier": "2.2.1",
     "tailwindcss": "npm:@tailwindcss/postcss7-compat@^2.1.0"
   },
-  "proxy": "http://localhost:5000"
+  "proxy": "http://localhost:5000",
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown"
+  }
 }
