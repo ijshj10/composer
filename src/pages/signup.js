@@ -16,7 +16,7 @@ export default function SignUp() {
 
   const [error, setError] = useState("");
   const isInvalid =
-    username == "" ||
+    username === "" ||
     password === "" ||
     emailAddress === "" ||
     passwordConfirm === "";
@@ -24,7 +24,7 @@ export default function SignUp() {
   const handleSignUp = async (event) => {
     event.preventDefault();
     const usernameExists = await doesUsernameExist(username);
-    if (password != passwordConfirm) {
+    if (password !== passwordConfirm) {
       setError("Those passwords didn’t match. Try again.");
     } else if (!usernameExists) {
       try {
