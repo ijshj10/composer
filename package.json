@@ -60,7 +60,6 @@
   "proxy": "http://localhost:5000",
   "lint-staged": {
     "**/*": [
-      "eslint --fix src",
       "prettier --write --ignore-unknown"
     ]
   }
