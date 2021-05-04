@@ -11,6 +11,7 @@
 # production
 /build
 /server/api/temp*
+/server/temp*
 /server/api/__pycache__/
 
 # misc

@@ -14,7 +14,7 @@ export default function useAuthListener() {
         try {
           localStorage.setItem("authUser", JSON.stringify(authUser));
         } catch (error) {
-          console.log(error);
+          console.error(error);
         }
         setUser(authUser);
       } else {

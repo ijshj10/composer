@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import React, { useContext, useState } from "react";
 import { useHistory } from "react-router";
 import Header from "../components/header";
 import ROUTES from "../constants";
@@ -43,10 +43,11 @@ export default function SignUp() {
           permission: 0,
         });
         history.push(ROUTES.MAIN);
-      } catch (error) {
+      } catch (e) {
         setUsername("");
         setEmailAddress("");
         setPassword("");
+        setPasswordConfirm("");
         setError(error.message);
       }
     } else {

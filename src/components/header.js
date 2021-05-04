@@ -1,9 +1,8 @@
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
+import React, { useContext } from "react";
 import ROUTES from "../constants";
-import { useContext } from "react";
 import UserContext from "../context/user";
 import { firebase } from "../lib/firebase";
-import { useHistory } from "react-router";
 
 export default function Header() {
   const { user: loggedInUser } = useContext(UserContext);
