@@ -22,7 +22,7 @@ export class Sidebar extends React.Component {
   render() {
     const items = ["menu", "file_download", "file_upload", "play_arrow"];
     return (
-      <div className={"flex flex-col border-r-2 h-screen w-12"}>
+      <div className={"flex flex-col border-r-2 w-12"}>
         {items.map((item, i) => {
           return (
             <button
