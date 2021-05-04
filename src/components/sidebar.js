@@ -21,8 +21,8 @@ export default function Sidebar() {
         {items.map((item, i) => (
           <button
             type="button"
-            className={`pt-4 pb-4 focus:outline-none material-icons-outlined hover:
-          }${SELECTED_COLOR} ${clicked === i ? SELECTED_COLOR : ""}`}
+            className={`pt-4 pb-4 focus:outline-none material-icons-outlined hover:bg-gray-200 
+          ${clicked === i ? SELECTED_COLOR : ""}`}
             onClick={() => handleClick(i)}
           >
             {item}
