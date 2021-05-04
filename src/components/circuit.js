@@ -23,26 +23,15 @@ export default function Composer() {
     document.addEventListener("mouseup", handleDrop);
   };
 
-  const [gates, setGates] = useState([
-    { key: 0, op: [] },
-    { key: 1, op: [] },
-    { key: 2, op: [] },
+  const [circuit, setCiruit] = useState([
+    { qubits: 3, qubitKey: { 0: 0, 1: 1, 2: 2 }, op: [] },
   ]);
 
-  /* const [code, setCode] = useState([
+  const [code, setCode] = useState([
     'OPENQASM 2.0;\ninclude "qelib1.inc";\n\nqreg q[3];\ncreg q[3];\n',
   ]);
   const [result, setResult] = useState(null);
   const [sidebarSelected, setSidebarSelected] = useState(-1);
-
-  handleDrag = (event, kind) => {
-    const clicked = { x: event.clientX, y: event.clientY, kind };
-    const mouseMove = (event) => {
-      this.setState({ clicked: { x: event.clientX, y: event.clientY, kind } });
-    };
-    this.setState({ clicked, dropI: i, dropJ: j });
-    window.addEventListener('mousemove', mouseMove);
-  }; */
 
   return (
     <>
@@ -65,7 +54,7 @@ export default function Composer() {
           <div className="flex flex-row flex-grow">
             <div className="flex flex-col border-r-2 flex-grow">
               <GatePannel handleDrag={handleDrag} />
-              <Circuit gates={gates} setGates={setGates} />
+              <Circuit circuit={circuit} setCiruit={setCiruit} />
             </div>
             <div className="w-2/6 ml-4">
               <textarea className="w-full h-full" readOnly />
@@ -81,27 +70,49 @@ function Circuit(props) {
   const startX = 30;
   const startY = 40;
 
-  const { gates, setGates } = props;
+  const spaceX = 45;
+  const spaceY = 50;
+
+  const { circuit, setCiruit } = props;
   const [dimension, ref] = useDimension();
 
+  const deleteQubit = (index) => {
+    setCiruit({
+      qubits: circuit.qubits - 1,
+      qubitKey: circuit.qubitKey,
+      op: circuit.op,
+    });
+  };
+
+  const addQubit = () => {
+    setGates(gates.concat([{ key: qubitKeyGenerator(), op: [] }]));
+  };
+
   return (
-    <div className="w-full h-1/2 border-b-2 border-t-2" ref={ref}>
-      <svg viewBox={`0 0 ${dimension.width} ${dimension.height}`}>
+    <div className="w-full h-1/2 border-b-2 border-t-2 overflow-auto" ref={ref}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
         {gates.map((qubit, index) => {
-          const height = startY + 50 * index;
+          const level = startY + spaceY * index;
           return (
-            <g key={qubit.key} transform={`translate(0,${height})`}>
-              <g>
+            <g key={qubit.key} transform={`translate(0,${level})`}>
+              <g transform="translate(0,-5)">
                 <svg
-                  className=""
+                  className="opacity-30 hover:opacity-100 cursor-pointer"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24px"
+                  height="24px"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
+                  onClick={() => deleteQubit(index)}
                 >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth="2"
+                    stroke="#d32f2f"
+                    fill="none"
+                    pointerEvents="all"
                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                   />
                 </svg>
@@ -117,14 +128,35 @@ function Circuit(props) {
             </g>
           );
         })}
+        <g transform={`translate(0, ${startY + gates.length * spaceY})`}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24px"
+            height="24px"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            className="opacity-30 hover:opacity-100 cursor-pointer"
+            onClick={() => addQubit()}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              fill="none"
+              pointerEvents="all"
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+            />
+          </svg>
+        </g>
       </svg>
     </div>
   );
 }
 
 Circuit.propTypes = {
-  gates: PropTypes.array.isRequired,
-  setGates: PropTypes.func.isRequired,
+  circuit: PropTypes.object.isRequired,
+  setCiruit: PropTypes.func.isRequired,
 };
 
 function GatePannel(props) {
@@ -190,4 +222,5 @@ function keyGenGenerator(inital) {
   };
 }
 
-const gateKeyGenerator = keyGenGenerator(3);
+const qubitKeyGenerator = keyGenGenerator(3);
+const gateKeyGenerator = keyGenGenerator(0);
