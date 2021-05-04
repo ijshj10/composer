@@ -154,7 +154,10 @@ class Composer extends React.Component {
       <div className="flex flex-row">
         <Sidebar handleClick={this.handleSidebarClick} />
         {this.state.sidebarSelected !== -1 && (
-          <SidebarOpened kind={this.state.sidebarSelected} />
+          <SidebarOpened
+            kind={this.state.sidebarSelected}
+            runSimulation={this.runSimulation}
+          />
         )}
         <div className="flex flex-col space-y-0 flex-grow">
           <Menu />
