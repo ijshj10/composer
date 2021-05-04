@@ -151,7 +151,7 @@ class Composer extends React.Component {
 
   render() {
     return (
-      <div className="flex flex-row">
+      <div className="flex flex-row flex-grow">
         <Sidebar handleClick={this.handleSidebarClick} />
         {this.state.sidebarSelected !== -1 && (
           <SidebarOpened
