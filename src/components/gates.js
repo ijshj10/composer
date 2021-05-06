@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import { SIZE, spaceY, startY } from "../constants";
 
 export function QuantumGate(props) {
-  const { operator, operands } = props;
+  const { operator, operands, handleMouseDown } = props;
   if (operator.endsWith("NULL")) {
     return <NULLGate operands={operands} />;
   }
@@ -14,9 +14,15 @@ export function QuantumGate(props) {
     case "Y":
     case "Z":
     case "M":
-      return <SingleQubitGate kind={operator} operands={operands} />;
+      return (
+        <SingleQubitGate
+          kind={operator}
+          operands={operands}
+          handleMouseDown={handleMouseDown}
+        />
+      );
     case "CNOT":
-      return <CNotGate operands={operands} />;
+      return <CNotGate operands={operands} handleMouseDown={handleMouseDown} />;
     default:
       return <div />;
   }
@@ -25,10 +31,11 @@ export function QuantumGate(props) {
 QuantumGate.propTypes = {
   operands: PropTypes.array.isRequired,
   operator: PropTypes.string.isRequired,
+  handleMouseDown: PropTypes.func.isRequired,
 };
 
 function SingleQubitGate(props) {
-  const { operands, kind } = props;
+  const { operands, kind, handleMouseDown } = props;
   const [operand] = operands;
   const y = operand * spaceY + startY - 10;
   return (
@@ -38,6 +45,7 @@ function SingleQubitGate(props) {
         width={SIZE + 4}
         height={SIZE + 4}
         className="cursor-pointer"
+        onMouseDown={(event) => handleMouseDown(kind, event.pageX, event.pageY)}
       >
         <rect
           x={0}
@@ -65,6 +73,7 @@ function SingleQubitGate(props) {
 SingleQubitGate.propTypes = {
   operands: PropTypes.array.isRequired,
   kind: PropTypes.string.isRequired,
+  handleMouseDown: PropTypes.func.isRequired,
 };
 
 function CNotGate(props) {
@@ -80,6 +89,9 @@ function CNotGate(props) {
         width={SIZE + 4}
         height={SIZE + height * spaceY + 4}
         className="cursor-pointer"
+        onMouseDown={(event) =>
+          props.handleMouseDown("CNOT", event.pageX, event.pageY)
+        }
       >
         <rect
           x={0}
@@ -97,6 +109,7 @@ function CNotGate(props) {
 
 CNotGate.propTypes = {
   operands: PropTypes.array.isRequired,
+  handleMouseDown: PropTypes.func.isRequired,
 };
 
 function NULLGate(props) {

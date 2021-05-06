@@ -60,6 +60,7 @@ export default function Composer() {
                 setCiruit={setCiruit}
                 clicked={clicked}
                 setClicked={setClicked}
+                handleDrag={handleDrag}
               />
             </div>
             <div className="w-2/6 ml-4">
@@ -115,6 +116,11 @@ function Circuit(props) {
       }),
     });
     setClicked(null);
+  };
+
+  const handleDrag = (key, kind, x, y) => {
+    setCiruit({ ...circuit, ops: ops.filter((op) => op.key !== key) });
+    props.handleDrag(kind, x, y);
   };
 
   useEffect(() => {
@@ -271,7 +277,11 @@ function Circuit(props) {
             key={key}
             transform={`translate(${startX + 10 + drawX * spaceX}, 0)`}
           >
-            <QuantumGate operator={operator} operands={operands} />
+            <QuantumGate
+              operator={operator}
+              operands={operands}
+              handleMouseDown={(kind, x, y) => handleDrag(key, kind, x, y)}
+            />
           </g>
         ))}
         <g transform={`translate(0, ${startY + qubitKeys.length * spaceY})`}>
@@ -305,6 +315,7 @@ Circuit.propTypes = {
   setCiruit: PropTypes.func.isRequired,
   clicked: PropTypes.object,
   setClicked: PropTypes.func.isRequired,
+  handleDrag: PropTypes.func.isRequired,
 };
 
 Circuit.defaultProps = {
