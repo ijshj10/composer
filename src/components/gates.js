@@ -1,7 +1,7 @@
 /* eslint-disable react/forbid-prop-types */
 import React from "react";
 import PropTypes from "prop-types";
-import { SIZE, spaceY, startY } from "../constants";
+import { SIZE, SPACE_Y, START_Y } from "../constants";
 
 export function QuantumGate(props) {
   const { operator, operands, handleMouseDown } = props;
@@ -37,7 +37,7 @@ QuantumGate.propTypes = {
 function SingleQubitGate(props) {
   const { operands, kind, handleMouseDown } = props;
   const [operand] = operands;
-  const y = operand * spaceY + startY - 10;
+  const y = operand * SPACE_Y + START_Y - 10;
   return (
     <g transform={`translate(0, ${y})`}>
       <svg
@@ -83,11 +83,11 @@ function CNotGate(props) {
   const end = Math.max(cer, ced);
   const height = end - start;
   return (
-    <g transform={`translate(0, ${start * spaceY + startY - 10})`}>
+    <g transform={`translate(0, ${start * SPACE_Y + START_Y - 10})`}>
       <svg
-        viewBox={`-2 -2 ${SIZE + 4} ${SIZE + height * spaceY + 4}`}
+        viewBox={`-2 -2 ${SIZE + 4} ${SIZE + height * SPACE_Y + 4}`}
         width={SIZE + 4}
-        height={SIZE + height * spaceY + 4}
+        height={SIZE + height * SPACE_Y + 4}
         className="cursor-pointer"
         onMouseDown={(event) =>
           props.handleMouseDown("CNOT", event.pageX, event.pageY)
@@ -97,7 +97,7 @@ function CNotGate(props) {
           x={0}
           y={0}
           width={SIZE}
-          height={SIZE + height * spaceY}
+          height={SIZE + height * SPACE_Y}
           fill="white"
           stroke="black"
           strokeWidth="2"
@@ -119,18 +119,18 @@ function NULLGate(props) {
   const end = Math.max(cer, ced);
   const height = end - start;
   return (
-    <g transform={`translate(0, ${start * spaceY + startY - 10})`}>
+    <g transform={`translate(0, ${start * SPACE_Y + START_Y - 10})`}>
       <svg
-        viewBox={`-2 -2 ${SIZE + 4} ${SIZE + height * spaceY + 4}`}
+        viewBox={`-2 -2 ${SIZE + 4} ${SIZE + height * SPACE_Y + 4}`}
         width={SIZE + 4}
-        height={SIZE + height * spaceY + 4}
+        height={SIZE + height * SPACE_Y + 4}
         className="cursor-pointer"
       >
         <rect
           x={0}
           y={0}
           width={SIZE}
-          height={SIZE + height * spaceY}
+          height={SIZE + height * SPACE_Y}
           fill="white"
           stroke="black"
           strokeWidth="2"
