@@ -2,7 +2,7 @@
 /* eslint-disable react/forbid-prop-types */
 import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import { GATES, startX, startY, spaceX, spaceY } from "../constants";
+import { GATES, START_X, START_Y, SPACE_X, SPACE_Y } from "../constants";
 import { Sidebar } from "./sidebar";
 import useDimension from "../hooks/useDimension";
 import { QuantumGate, getArity } from "./gates";
@@ -160,10 +160,10 @@ function Circuit(props) {
       x -= dimension.left;
       const airity = getArity(clicked.kind);
       if (y >= 0) {
-        dropI = Math.ceil(Math.max(y - startY - spaceY / 2, 0) / spaceY);
+        dropI = Math.ceil(Math.max(y - START_Y - SPACE_Y / 2, 0) / SPACE_Y);
       }
       if (dropI !== null && dropI + airity <= qubitKeys.length) {
-        dropJ = Math.ceil(Math.max(x - startX - spaceX / 2, 0) / spaceX);
+        dropJ = Math.ceil(Math.max(x - START_X - SPACE_X / 2, 0) / SPACE_X);
       }
       if (dropJ !== null) dropRendered = false;
     }
@@ -236,7 +236,7 @@ function Circuit(props) {
     <div className="w-full h-1/2 border-b-2 border-t-2 overflow-auto" ref={ref}>
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
         {qubitKeys.map((key, index) => {
-          const level = startY + spaceY * index;
+          const level = START_Y + SPACE_Y * index;
           return (
             <g key={key} transform={`translate(0,${level})`}>
               <g transform="translate(0,-5)">
@@ -262,7 +262,7 @@ function Circuit(props) {
                 </svg>
               </g>
               <line
-                x1={startX}
+                x1={START_X}
                 x2={dimension ? dimension.left + dimension.width : 0}
                 y1={5}
                 y2={5}
@@ -275,7 +275,7 @@ function Circuit(props) {
         {opRendered.map(({ key, operator, operands, drawX }) => (
           <g
             key={key}
-            transform={`translate(${startX + 10 + drawX * spaceX}, 0)`}
+            transform={`translate(${START_X + 10 + drawX * SPACE_X}, 0)`}
           >
             <QuantumGate
               operator={operator}
@@ -284,7 +284,7 @@ function Circuit(props) {
             />
           </g>
         ))}
-        <g transform={`translate(0, ${startY + qubitKeys.length * spaceY})`}>
+        <g transform={`translate(0, ${START_Y + qubitKeys.length * SPACE_Y})`}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24px"
