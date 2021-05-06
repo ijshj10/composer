@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { GATES, startX, startY, spaceX, spaceY } from "../constants";
-import Sidebar from "./sidebar";
+import { Sidebar } from "./sidebar";
 import useDimension from "../hooks/useDimension";
 import { QuantumGate, getArity } from "./gates";
 
