@@ -20,6 +20,7 @@ export default function Sidebar() {
       <div className="flex flex-col  w-12">
         {items.map((item, i) => (
           <button
+            key={item}
             type="button"
             className={`pt-4 pb-4 focus:outline-none material-icons-outlined hover:bg-gray-200 
           ${clicked === i ? SELECTED_COLOR : ""}`}
