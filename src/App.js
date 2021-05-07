@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
-import { Suspense, lazy } from "react";
+import React, { Suspense, lazy } from "react";
 import NotFound from "./pages/not-found";
 import ROUTES from "./constants";
 import useAuthListener from "./hooks/use-auth-listener";

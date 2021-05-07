@@ -1,360 +1,370 @@
-import React from "react";
-import { GATES, SIZE } from "../constants";
-import { Sidebar, SidebarOpened } from "./sidebar";
+/* eslint-disable no-use-before-define */
+/* eslint-disable react/forbid-prop-types */
+import React, { useEffect, useState } from "react";
+import PropTypes from "prop-types";
+import { GATES, START_X, START_Y, SPACE_X, SPACE_Y } from "../constants";
+import { Sidebar } from "./sidebar";
+import useDimension from "../hooks/useDimension";
+import { QuantumGate, getArity } from "./gates";
 
-class Composer extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      clicked: null,
-      gates: [[], [], []],
-      dropI: null,
-      dropJ: null,
-      left: 0,
-      top: 0,
-      width: 0,
-      height: 0,
-      code: [
-        'OPENQASM 2.0;\ninclude "qelib1.inc";\n\nqreg q[3];\ncreg q[3];\n',
-      ],
-      result: null,
-      sidebarSelected: -1,
+export default function Composer() {
+  const [clicked, setClicked] = useState(null);
+
+  const handleDrag = (kind, x, y) => {
+    setClicked({ kind: `${kind}NULL`, x, y });
+    const handleMouseMove = (event) => {
+      setClicked({ kind: `${kind}NULL`, x: event.pageX, y: event.pageY });
     };
-  }
-
-  // Drag and drop highlight
-  getIndex = (clientX, clientY) => {
-    const x = clientX - this.state.left;
-    const y = clientY - this.state.top;
-    let i;
-    const rows = this.state.gates.length;
-    if (y < 0) {
-      return [undefined, undefined];
-    } else if (y < 65) {
-      i = 0;
-    } else {
-      i = Math.min(Math.ceil((y - 65) / 50), rows - 1);
-    }
-
-    const cols = this.state.gates[i].length;
-
-    let j;
-    if (x < 0) {
-      return [undefined, undefined];
-    } else if (x < 46) {
-      j = 0;
-    } else {
-      j = Math.max(Math.min(Math.ceil((x - 46) / 45), cols), 0);
-    }
-    return [i, j];
-  };
-
-  // Drag
-  handleDrag = (event, kind, i, j) => {
-    if (i !== undefined) {
-      let qubit = this.state.gates[i]
-        .slice(0, j)
-        .concat(this.state.gates[i].slice(j + 1));
-      let gates = this.state.gates.slice(0, i);
-      gates.push(qubit);
-      gates = gates.concat(this.state.gates.slice(i + 1));
-      this.setState({ gates });
-    }
-
-    const clicked = { x: event.clientX, y: event.clientY, kind: kind };
-    const mouseMove = (event) => {
-      this.setState({ clicked: { x: event.clientX, y: event.clientY, kind } });
+    const handleDrop = () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleDrop);
     };
-    const drop = (event) => {
-      this.setState({ clicked: null });
-      const [i, j] = this.getIndex(event.clientX, event.clientY);
-      const gates = this.state.gates.slice();
-
-      if (i !== undefined) {
-        // do update gates
-        const newGates = gates[i].slice(0, j);
-        newGates.push(kind);
-        gates[i] = newGates.concat(gates[i].slice(j));
-      }
-      this.setState({ gates, code: this.generateCode(gates) });
-      window.removeEventListener("mousemove", mouseMove);
-      window.removeEventListener("mouseup", drop);
-    };
-    this.setState({ clicked, dropI: i, dropJ: j });
-    window.addEventListener("mousemove", mouseMove);
-    window.addEventListener("mouseup", drop);
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleDrop);
   };
 
-  // svg size
-  setDimension = (rect) => {
-    this.setState({
-      top: rect.top,
-      left: rect.left,
-      width: rect.width,
-      height: rect.height,
-    });
-  };
+  const [circuit, setCiruit] = useState({
+    qubitKeys: [0, 1, 2],
+    ops: [],
+  });
+  /*
+  const [code, setCode] = useState([
+    'OPENQASM 2.0;\ninclude "qelib1.inc";\n\nqreg q[3];\ncreg q[3];\n',
+  ]);
+  const [result, setResult] = useState(null);
+  */
 
-  // openqasm generation
-
-  generateCode = (gates) => {
-    const qubitCount = gates.length;
-    const qasm = [
-      `OPENQASM 2.0;\ninclude "qelib1.inc";\n\nqreg q[${qubitCount}];\ncreg q[${qubitCount}];\n`,
-    ];
-
-    let maxLen = 0;
-    gates.forEach((qubit) => {
-      maxLen = Math.max(qubit.length, maxLen);
-    });
-
-    for (let j = 0; j < maxLen; j++) {
-      gates.forEach((qubit, i) => {
-        if (qubit[j] !== undefined) {
-          let instr;
-          if (qubit[j] === "M") {
-            instr = `measure q[${i}] -> c[${i}];`;
-          } else {
-            instr = `${qubit[j].toLowerCase()} q[${i}];`;
-          }
-          qasm.push(instr);
-        }
-      });
-    }
-
-    return qasm.join("\n");
-  };
-
-  addQubit = () => {
-    this.setState({ gates: this.state.gates.concat([[]]) });
-  };
-
-  runSimulation = () => {
-    fetch("/api/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        code: this.state.gates,
-      }),
-    }).then((response) => {
-      response.text().then((text) => {
-        this.setState({ result: text });
-      });
-    });
-  };
-
-  handleSidebarClick = (clicked) => {
-    this.setState({ sidebarSelected: clicked });
-  };
-
-  render() {
-    return (
+  return (
+    <>
+      {clicked !== null && (
+        <div
+          className="absolute gate"
+          style={{
+            top: clicked.y - 24,
+            left: clicked.x - 24,
+          }}
+        >
+          {clicked.kind[0]}
+        </div>
+      )}
       <div className="flex flex-row flex-grow">
-        <Sidebar handleClick={this.handleSidebarClick} />
-        {this.state.sidebarSelected !== -1 && (
-          <SidebarOpened
-            kind={this.state.sidebarSelected}
-            runSimulation={this.runSimulation}
-          />
-        )}
+        <Sidebar />
         <div className="flex flex-col space-y-0 flex-grow">
           <Menu />
           <Title />
           <div className="flex flex-row flex-grow">
             <div className="flex flex-col border-r-2 flex-grow">
-              <GatePannel handleDrag={this.handleDrag} />
-              {this.state.clicked !== null && (
-                <div
-                  className="absolute gate"
-                  style={{
-                    top: this.state.clicked.y - 24,
-                    left: this.state.clicked.x - 24,
-                  }}
-                >
-                  {this.state.clicked.kind}
-                </div>
-              )}
+              <GatePannel handleDrag={handleDrag} />
               <Circuit
-                handleDrag={this.handleDrag}
-                dragged={this.state.clicked}
-                gates={this.state.gates}
-                notifyDimension={this.setDimension}
-                width={this.state.width}
-                getIndex={this.getIndex}
-                addQubit={this.addQubit}
+                circuit={circuit}
+                setCiruit={setCiruit}
+                clicked={clicked}
+                setClicked={setClicked}
+                handleDrag={handleDrag}
               />
-              {this.state.result && <Histogram result={this.state.result} />}
             </div>
             <div className="w-2/6 ml-4">
-              <textarea
-                className="w-full h-full"
-                value={this.state.code}
-                readOnly
-              ></textarea>
+              <textarea className="w-full h-full" readOnly />
             </div>
           </div>
         </div>
       </div>
-    );
-  }
+    </>
+  );
 }
 
-class Circuit extends React.Component {
-  constructor(props) {
-    super(props);
-    this.handleDrag = props.handleDrag;
-  }
+function Circuit(props) {
+  const { circuit, setCiruit, clicked, setClicked } = props;
+  const [dimension, ref] = useDimension();
 
-  componentDidMount() {
-    const rect = this.container.getBoundingClientRect();
-    this.props.notifyDimension(rect);
-  }
+  const { qubitKeys, ops } = circuit;
 
-  render() {
-    const width = this.props.width;
-    const startX = Math.floor(width / 20);
-    const endX = startX * 19;
-    const gates = [];
+  const addQubit = () => {
+    setCiruit({
+      qubitKeys: qubitKeys.concat([qubitKeyGenerator()]),
+      ops,
+    });
+  };
 
-    let key = 0;
+  const deleteQubit = (index) => {
+    setCiruit({
+      qubitKeys: qubitKeys.filter((_, i) => i !== index),
+      ops: ops
+        .filter((op) => !op.operands.includes(index))
+        .map((op) => {
+          const fixedOperands = op.operands.map((operand) => {
+            if (operand < index) return operand;
+            return operand - 1;
+          });
+          return { ...op, operands: fixedOperands };
+        }),
+    });
+  };
 
-    let dropI, dropJ;
+  const handleDrop = () => {
+    if (clicked === null) return;
+    const opRendered = renderOps(ops);
+    setCiruit({
+      ...circuit,
+      ops: opRendered.map(({ operator, operands, key }) => {
+        if (key !== 0) return { operator, operands, key };
+        return {
+          operator: operator.substr(0, operator.length - 4),
+          operands,
+          key: opKeyGenerator(),
+        };
+      }),
+    });
+    setClicked(null);
+  };
 
-    if (this.props.dragged !== null) {
-      [dropI, dropJ] = this.props.getIndex(
-        this.props.dragged.x,
-        this.props.dragged.y
-      );
+  const handleDrag = (key, kind, x, y) => {
+    setCiruit({ ...circuit, ops: ops.filter((op) => op.key !== key) });
+    props.handleDrag(kind, x, y);
+  };
+
+  useEffect(() => {
+    document.addEventListener("mouseup", handleDrop);
+    return () => document.removeEventListener("mouseup", handleDrop);
+  });
+
+  const { width, height } = dimension;
+
+  const renderOps = (operations) => {
+    const nextX = Array(qubitKeys.length).fill(0);
+    // First sort gate for drop implementation
+    let opRendered = [];
+    operations.forEach((op) => {
+      const { operands } = op;
+      const minOperand = Math.min(...operands);
+      const maxOperand = Math.max(...operands);
+      let drawX = 0;
+      for (let i = minOperand; i <= maxOperand; i += 1) {
+        drawX = Math.max(drawX, nextX[i]);
+      }
+
+      for (let i = minOperand; i <= maxOperand; i += 1) {
+        nextX[i] = drawX + 1;
+      }
+      opRendered.push({ ...op, drawX });
+    });
+    opRendered.sort((gate1, gate2) => gate1.drawX - gate2.drawX);
+
+    let dropI = null;
+    let dropJ = null;
+
+    let dropRendered = true;
+    if (clicked) {
+      let { x, y } = clicked;
+      y -= dimension.top;
+      x -= dimension.left;
+      const airity = getArity(clicked.kind);
+      if (y >= 0) {
+        dropI = Math.ceil(Math.max(y - START_Y - SPACE_Y / 2, 0) / SPACE_Y);
+      }
+      if (dropI !== null && dropI + airity <= qubitKeys.length) {
+        dropJ = Math.ceil(Math.max(x - START_X - SPACE_X / 2, 0) / SPACE_X);
+      }
+      if (dropJ !== null) dropRendered = false;
     }
 
-    let i = 0;
-    this.props.gates.forEach((qubit, ii) => {
-      let j = 0;
-      qubit.forEach((gate, jj) => {
-        if (i === dropI && j === dropJ) {
-          gates.push(
-            <g key={key++}>
-              <rect
-                x={30 + 45 * j}
-                y={40 + 50 * i - 16}
-                width={SIZE}
-                height={SIZE}
-                fill="white"
+    // Insert drop point
+    const opAndDropRendered = [];
+    if (!dropRendered) {
+      nextX.fill(0);
+      const airity = getArity(clicked.kind);
+
+      opRendered.forEach((op) => {
+        const { operands } = op;
+        const minOperand = Math.min(...operands);
+        const maxOperand = Math.max(...operands);
+
+        let drawX = 0;
+
+        for (let i = minOperand; i <= maxOperand; i += 1) {
+          drawX = Math.max(drawX, nextX[i]);
+        }
+        if (
+          !dropRendered &&
+          drawX >= dropJ &&
+          minOperand <= dropI + airity - 1 &&
+          dropI <= maxOperand
+        ) {
+          let dropX = 0;
+          for (let i = dropI; i < dropI + airity; i += 1) {
+            dropX = Math.max(dropX, nextX[i]);
+          }
+
+          opAndDropRendered.push({
+            operator: clicked.kind,
+            operands: [dropI, dropI + airity - 1],
+            key: 0,
+            drawX: dropX,
+          });
+          dropRendered = true;
+          for (let i = dropI; i < dropI + airity; i += 1) {
+            nextX[i] = dropX + 1;
+          }
+          if (dropX === drawX) drawX += 1;
+        }
+
+        opAndDropRendered.push({ ...op, drawX });
+        for (let i = minOperand; i <= maxOperand; i += 1) {
+          nextX[i] = drawX + 1;
+        }
+      });
+      if (!dropRendered) {
+        let dropX = 0;
+        for (let i = dropI; i < dropI + airity; i += 1) {
+          dropX = Math.max(dropX, nextX[i]);
+        }
+        opAndDropRendered.push({
+          operator: clicked.kind,
+          operands: [dropI, dropI + airity - 1],
+          key: 0,
+          drawX: dropX,
+        });
+      }
+      opRendered = opAndDropRendered;
+    }
+    return opRendered;
+  };
+
+  const opRendered = renderOps(ops);
+
+  return (
+    <div className="w-full h-1/2 border-b-2 border-t-2 overflow-auto" ref={ref}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+        {qubitKeys.map((key, index) => {
+          const level = START_Y + SPACE_Y * index;
+          return (
+            <g key={key} transform={`translate(0,${level})`}>
+              <g transform="translate(0,-5)">
+                <svg
+                  className="opacity-30 hover:opacity-100 cursor-pointer"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24px"
+                  height="24px"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  onClick={() => deleteQubit(index)}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    stroke="#d32f2f"
+                    fill="none"
+                    pointerEvents="all"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+              </g>
+              <line
+                x1={START_X}
+                x2={dimension ? dimension.left + dimension.width : 0}
+                y1={5}
+                y2={5}
+                strokeWidth={0.5}
                 stroke="black"
-                strokeDasharray="4 1"
-                strokeWidth="1"
               />
             </g>
           );
-          j++;
-        }
-        gates.push(
-          <g key={key++}>
-            <rect
-              onMouseDown={(event) => this.handleDrag(event, gate, ii, jj)}
-              x={30 + 45 * j}
-              y={40 + 50 * i - 16}
-              width={SIZE}
-              height={SIZE}
-              fill="white"
-              stroke="black"
-              strokeWidth="2"
-            />
-            <text
-              onMouseDown={(event) => this.handleDrag(event, gate, ii, jj)}
-              className="select-none"
-              x={30 + 45 * j + 12}
-              y={40 + 50 * i + 4}
-              fontSize="12px"
-              fontWeight="800"
-            >
-              {gate}
-            </text>
-          </g>
-        );
-        j++;
-      });
-      if (i === dropI && j === dropJ) {
-        gates.push(
-          <g key={key++}>
-            <rect
-              x={30 + 45 * j}
-              y={40 + 50 * i - 16}
-              width={SIZE}
-              height={SIZE}
-              fill="white"
-              stroke="black"
-              strokeDasharray="4 1"
-              strokeWidth="1"
-            />
-          </g>
-        );
-        j++;
-      }
-      i++;
-    });
-
-    return (
-      <svg
-        className="w-full h-1/2 border-b-2 border-t-2"
-        ref={(el) => (this.container = el)}
-      >
-        {this.props.gates.map((qubit, i) => {
-          return (
-            <line
-              key={i}
-              x1={20}
-              x2={endX}
-              y1={40 + 50 * i}
-              y2={40 + 50 * i}
-              strokeWidth={0.5}
-              stroke="black"
-            />
-          );
         })}
-        {gates}
-        <text
-          className="material-icons-outlined select-none"
-          x={5}
-          y={40 + 50 * this.props.gates.length - 10}
-          onClick={this.props.addQubit}
-        >
-          add_circle_outlined
-        </text>
-      </svg>
-    );
-  }
-}
-
-function GatePannel(props) {
-  return (
-    <div className="flex flex-row bo">
-      {GATES.map((kind, i) => {
-        return (
-          <div
-            key={i}
-            className="gate"
-            onMouseDown={(event) => props.handleDrag(event, kind)}
+        {opRendered.map(({ key, operator, operands, drawX }) => (
+          <g
+            key={key}
+            transform={`translate(${START_X + 10 + drawX * SPACE_X}, 0)`}
           >
-            {kind}
-          </div>
-        );
-      })}
+            <QuantumGate
+              operator={operator}
+              operands={operands}
+              handleMouseDown={(kind, x, y) => handleDrag(key, kind, x, y)}
+            />
+          </g>
+        ))}
+        <g transform={`translate(0, ${START_Y + qubitKeys.length * SPACE_Y})`}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24px"
+            height="24px"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            className="opacity-30 hover:opacity-100 cursor-pointer"
+            onClick={() => addQubit()}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              fill="none"
+              pointerEvents="all"
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+            />
+          </svg>
+        </g>
+      </svg>
     </div>
   );
 }
 
+Circuit.propTypes = {
+  circuit: PropTypes.object.isRequired,
+  setCiruit: PropTypes.func.isRequired,
+  clicked: PropTypes.object,
+  setClicked: PropTypes.func.isRequired,
+  handleDrag: PropTypes.func.isRequired,
+};
+
+Circuit.defaultProps = {
+  clicked: null,
+};
+
+function GatePannel(props) {
+  const { handleDrag } = props;
+  return (
+    <div className="flex flex-row bo">
+      {GATES.map((operator) => (
+        <button
+          type="button"
+          key={operator}
+          className="gate"
+          onMouseDown={(event) => {
+            handleDrag(operator, event.pageX, event.pageY);
+          }}
+        >
+          {operator[0]}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+GatePannel.propTypes = {
+  handleDrag: PropTypes.func.isRequired,
+};
+
 function Menu() {
   return (
     <div className="border-b-2 flex flex-row">
-      <button className="menu">File</button>
-      <button className="menu">Edit</button>
-      <button className="menu">Inspect</button>
-      <button className="menu">View</button>
-      <button className="menu">Share</button>
-      <div></div>
+      <button type="button" className="menu">
+        File
+      </button>
+      <button type="button" className="menu">
+        Edit
+      </button>
+      <button type="button" className="menu">
+        Inspect
+      </button>
+      <button type="button" className="menu">
+        View
+      </button>
+      <button type="button" className="menu">
+        Share
+      </button>
+      <div />
     </div>
   );
 }
@@ -362,21 +372,18 @@ function Menu() {
 function Title() {
   return (
     <form className="border-b-2">
-      <input
-        type="text"
-        defaultValue="Untitled circuit"
-        className="p-2"
-      ></input>
+      <input type="text" defaultValue="Untitled circuit" className="p-2" />
     </form>
   );
 }
 
-function Histogram(props) {
-  return (
-    <div className="w-1/2 align-middle flex items-center justify-center">
-      <img src={"data:image/png;base64," + props.result} alt="" />
-    </div>
-  );
+function keyGenGenerator(inital) {
+  let count = inital;
+  return () => {
+    count += 1;
+    return count - 1;
+  };
 }
 
-export default Composer;
+const qubitKeyGenerator = keyGenGenerator(3);
+const opKeyGenerator = keyGenGenerator(1);

@@ -1,6 +1,5 @@
-import { useContext, useState } from "react";
-import { useHistory } from "react-router";
-import { Link } from "react-router-dom";
+import React, { useContext, useState } from "react";
+import { Link, useHistory } from "react-router-dom";
 import Header from "../components/header";
 import ROUTES from "../constants";
 import FirebaseContext from "../context/firebase";
@@ -21,7 +20,7 @@ export default function Login() {
     try {
       await firebase.auth().signInWithEmailAndPassword(emailAddress, password);
       history.push(ROUTES.MAIN);
-    } catch (error) {
+    } catch (e) {
       setEmailAddress("");
       setPassword("");
       setError(error.message);
@@ -61,7 +60,7 @@ export default function Login() {
           </form>
           <div className="flex justify-center items-center flex-col w-full bg-white p-4 rounded border border-gray-400 mt-4">
             <p className="text-sm">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Link to={ROUTES.SIGNUP} className="font-bold text-blue-500">
                 Sign up
               </Link>

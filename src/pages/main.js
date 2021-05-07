@@ -1,3 +1,4 @@
+import React from "react";
 import Composer from "../components/circuit";
 import Header from "../components/header";
 
