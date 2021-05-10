@@ -4,8 +4,9 @@ import UserContext from "../context/user";
 
 const SELECTED_COLOR = "bg-gray-200 ";
 
-export default function Sidebar() {
+export default function Sidebar(props) {
   const [clicked, setClicked] = useState(-1);
+  const { runSimulation } = props;
 
   const handleClick = (newClicked) => {
     if (clicked === newClicked) {
@@ -30,10 +31,16 @@ export default function Sidebar() {
           </button>
         ))}
       </div>
-      {clicked !== -1 && <SidebarOpened kind={clicked} />}
+      {clicked !== -1 && (
+        <SidebarOpened kind={clicked} runSimulation={runSimulation} />
+      )}
     </div>
   );
 }
+
+Sidebar.propTypes = {
+  runSimulation: PropTypes.func.isRequired,
+};
 
 function SidebarOpened(props) {
   const { user: loggedInUser } = useContext(UserContext);

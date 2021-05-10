@@ -4,7 +4,16 @@ import PropTypes from "prop-types";
 import { SIZE, SPACE_Y, START_Y } from "../constants";
 
 export function QuantumGate(props) {
-  const { operator, operands, handleMouseDown } = props;
+  const {
+    operator,
+    operands,
+    handleMouseDown,
+    gates,
+    setGates,
+    id,
+    left,
+    top,
+  } = props;
   if (operator.endsWith("NULL")) {
     return <NULLGate operands={operands} />;
   }
@@ -22,16 +31,30 @@ export function QuantumGate(props) {
         />
       );
     case "CNOT":
-      return <CNotGate operands={operands} handleMouseDown={handleMouseDown} />;
+      return (
+        <CNotGate
+          operands={operands}
+          handleMouseDown={handleMouseDown}
+          gates={gates}
+          setGates={setGates}
+          id={id}
+          top={top}
+        />
+      );
     default:
       return <div />;
   }
 }
 
 QuantumGate.propTypes = {
+  id: PropTypes.number.isRequired,
+  gates: PropTypes.array.isRequired,
+  setGates: PropTypes.func.isRequired,
   operands: PropTypes.array.isRequired,
   operator: PropTypes.string.isRequired,
   handleMouseDown: PropTypes.func.isRequired,
+  left: PropTypes.number.isRequired,
+  top: PropTypes.number.isRequired,
 };
 
 function SingleQubitGate(props) {
@@ -77,11 +100,19 @@ SingleQubitGate.propTypes = {
 };
 
 function CNotGate(props) {
-  const { operands } = props;
-  const [cer, ced] = operands;
+  const { operands, gates, setGates, id, top } = props;
+  let [cer, ced] = operands;
   const start = Math.min(cer, ced);
   const end = Math.max(cer, ced);
   const height = end - start;
+  if (cer > ced) {
+    cer = height;
+    ced = 0;
+  } else {
+    cer = 0;
+    ced = height;
+  }
+
   return (
     <g transform={`translate(0, ${start * SPACE_Y + START_Y - 10})`}>
       <svg
@@ -98,9 +129,76 @@ function CNotGate(props) {
           y={0}
           width={SIZE}
           height={SIZE + height * SPACE_Y}
+          fill="none"
+          stroke="none"
+          strokeWidth="2"
+          pointerEvents="all"
+        />
+        <g>
+          <svg
+            onMouseDown={(event) => {
+              const handleMouseMove = (e) => {
+                const y = e.clientY - top;
+                const i = Math.ceil(
+                  Math.max(y - START_Y - SPACE_Y / 2, 0) / SPACE_Y
+                );
+
+                setGates(
+                  gates.map((gate) => {
+                    if (gate.key !== id) return gate;
+                    return { ...gate, operands: [i, gate.operands[1]] };
+                  })
+                );
+              };
+              const handleMouseUp = () => {
+                document.removeEventListener("mousemove", handleMouseMove);
+                document.removeEventListener("mouseup", handleMouseUp);
+              };
+              document.addEventListener("mousemove", handleMouseMove);
+              document.addEventListener("mouseup", handleMouseUp);
+              event.stopPropagation();
+            }}
+          >
+            <circle r={5} cx={SIZE / 2} cy={cer * SPACE_Y + SIZE / 2 - 3} />
+            <circle
+              className="hover:opacity-100 opacity-0"
+              r={6}
+              cx={SIZE / 2}
+              cy={cer * SPACE_Y + SIZE / 2 - 3}
+              stroke="red"
+            />
+          </svg>
+        </g>
+        <circle
+          r={SIZE / 3}
+          cx={SIZE / 2}
+          cy={ced * SPACE_Y + SIZE / 2 - 3}
           fill="white"
           stroke="black"
-          strokeWidth="2"
+        />
+        <line
+          x1={SIZE / 2}
+          y1={cer * SPACE_Y + SIZE / 2 - 3}
+          x2={SIZE / 2}
+          y2={ced * SPACE_Y + SIZE - 10}
+          strokeWidth="1"
+          stroke="black"
+        />
+        <line
+          x1={SIZE / 2}
+          y1={ced * SPACE_Y + 3}
+          x2={SIZE / 2}
+          y2={ced * SPACE_Y + SIZE - 10}
+          strokeWidth="1"
+          stroke="black"
+        />
+        <line
+          x1={SIZE / 6}
+          x2={(SIZE * 5) / 6}
+          y1={ced * SPACE_Y + SIZE / 2 - 3}
+          y2={ced * SPACE_Y + SIZE / 2 - 3}
+          strokeWidth="1"
+          stroke="black"
         />
       </svg>
     </g>
@@ -108,8 +206,12 @@ function CNotGate(props) {
 }
 
 CNotGate.propTypes = {
+  gates: PropTypes.array.isRequired,
+  setGates: PropTypes.func.isRequired,
   operands: PropTypes.array.isRequired,
   handleMouseDown: PropTypes.func.isRequired,
+  id: PropTypes.number.isRequired,
+  top: PropTypes.number.isRequired,
 };
 
 function NULLGate(props) {
