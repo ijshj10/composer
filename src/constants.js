@@ -1,4 +1,4 @@
-export const GATES = ["H", "X", "Y", "Z", "CNOT", "M"];
+export const GATES = ["H", "X", "Y", "Z", "CX", "M"];
 export const SIZE = 32;
 export const START_X = 30;
 export const START_Y = 40;

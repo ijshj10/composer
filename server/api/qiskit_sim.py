@@ -5,22 +5,14 @@ import matplotlib.pyplot as plt
 import base64
 
 
-def run(gates):
-    qc = QuantumCircuit(len(gates), len(gates))
-    maxLen = len(max(gates, key=len))
-    for j in range(maxLen):
-        for (i, qubit) in enumerate(gates):
-            if j < len(qubit):
-                if qubit[j] == 'H':
-                    qc.h(i)
-                elif qubit[j] == 'X':
-                    qc.x(i)
-                elif qubit[j] == 'Y':
-                    qc.y(i)
-                elif qubit[j] == 'Z':
-                    qc.z(i)
-                elif qubit[j] == 'M':
-                    qc.measure([i], [i])
+def run(circuit):
+    qc = QuantumCircuit(len(circuit["qubitKeys"]))
+
+    for op in circuit["ops"]:
+        if op["operation"] == "CNOT":
+            qc.cx(op["operands"][0], op["operands"][1])
+        elif op["operation"] == "H":
+            qc.h(op['operands'][0])
 
     backend = BasicAer.get_backend('qasm_simulator')
     result = execute(qc, backend, shots=1000).result()

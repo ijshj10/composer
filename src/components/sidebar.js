@@ -81,5 +81,3 @@ SidebarOpened.propTypes = {
   kind: PropTypes.number.isRequired,
   runSimulation: PropTypes.func.isRequired,
 };
-
-export { Sidebar };

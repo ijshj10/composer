@@ -1,5 +1,5 @@
 import React from "react";
-import Composer from "../components/circuit";
+import Composer from "../components/composer";
 import Header from "../components/header";
 
 export default function Main() {

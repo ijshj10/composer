@@ -1,160 +1,45 @@
 /* eslint-disable no-use-before-define */
-/* eslint-disable react/forbid-prop-types */
-import React, { useEffect, useState } from "react";
-import PropTypes from "prop-types";
-import { GATES, START_X, START_Y, SPACE_X, SPACE_Y } from "../constants";
-import { Sidebar } from "./sidebar";
+/* eslint-disable react/prop-types */
+import React, { useEffect } from "react";
+import { START_X, START_Y, SPACE_X, SPACE_Y } from "../constants";
 import useDimension from "../hooks/useDimension";
-import { QuantumGate, getArity } from "./gates";
+import { getArity, QuantumGate } from "./gates";
 
-export default function Composer() {
-  const [clicked, setClicked] = useState(null);
-
-  const handleDrag = (kind, x, y) => {
-    setClicked({ kind: `${kind}NULL`, x, y });
-    const handleMouseMove = (event) => {
-      setClicked({
-        kind: `${kind}NULL`,
-        x: event.pageX,
-        y: event.pageY,
-      });
-    };
-    const handleDrop = () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleDrop);
-    };
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleDrop);
-  };
-
-  const [circuit, setCiruit] = useState({
-    qubitKeys: [0, 1, 2, 3],
-    ops: [{ operator: "CNOT", operands: [1, 2], key: 1 }],
-  });
-  const [code, setCode] = useState([
-    'OPENQASM 2.0;\ninclude "qelib1.inc";\n\nqreg q[3];\ncreg q[3];\n',
-  ]);
-  const [result, setResult] = useState(null);
-
-  const runSimulation = () => {
-    fetch("/api/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        code: circuit.ops,
-      }),
-    }).then((response) => {
-      response.text().then((text) => {
-        setResult(text);
-      });
-    });
-  };
-
-  useEffect(() => {
-    let newCode = 'OPENQASM 2.0;\ninclude "qelib1.inc";\n\n';
-    newCode += `qreg q[${circuit.qubitKeys.length}];\ncreg q[${circuit.qubitKeys.length}];\n\n`;
-    circuit.ops.forEach((op) => {
-      if (op.operator === "CNOT") {
-        newCode += `cx q[${op.operands[0]}] q[${op.operands[1]}];\n`;
-      } else {
-        newCode += `${op.operator.toLowerCase()} q[${op.operands[0]}];\n`;
-      }
-    });
-    setCode(newCode);
-  }, [circuit]);
-
-  return (
-    <>
-      {clicked !== null && (
-        <div
-          className="absolute gate"
-          style={{
-            top: clicked.y - 24,
-            left: clicked.x - 24,
-          }}
-        >
-          {clicked.kind[0]}
-        </div>
-      )}
-      <div className="flex flex-row flex-grow">
-        <Sidebar runSimulation={runSimulation} />
-        <div className="flex flex-col space-y-0 flex-grow">
-          <Menu />
-          <Title />
-          <div className="flex flex-row flex-grow">
-            <div className="flex flex-col border-r-2 flex-grow">
-              <GatePannel handleDrag={handleDrag} />
-              <Circuit
-                circuit={circuit}
-                setCiruit={setCiruit}
-                clicked={clicked}
-                setClicked={setClicked}
-                handleDrag={handleDrag}
-              />
-              <div className="w-1/2 align-middle flex items-center justify-center">
-                <img src={`data:image/png;base64,${result}`} alt="" />
-              </div>
-            </div>
-            <div className="w-2/6 ml-4">
-              <textarea className="w-full h-full" readOnly value={code} />
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
-  );
-}
-
-function Circuit(props) {
-  const { circuit, setCiruit, clicked, setClicked } = props;
+export default function Circuit(props) {
+  const { dragged, ops, setOps, numQubits, setNumQubits } = props;
   const [dimension, ref] = useDimension();
 
-  const { qubitKeys, ops } = circuit;
-
   const addQubit = () => {
-    setCiruit({
-      qubitKeys: qubitKeys.concat([qubitKeyGenerator()]),
-      ops,
-    });
+    setNumQubits(numQubits + 1);
   };
 
   const deleteQubit = (index) => {
-    setCiruit({
-      qubitKeys: qubitKeys.filter((_, i) => i !== index),
-      ops: ops
-        .filter((op) => !op.operands.includes(index))
-        .map((op) => {
-          const fixedOperands = op.operands.map((operand) => {
-            if (operand < index) return operand;
-            return operand - 1;
-          });
-          return { ...op, operands: fixedOperands };
-        }),
-    });
+    const newOps = ops
+      .filter(({ operands }) => !operands.include(index)) // remove operation involving deleted qubit
+      .map(({ operation, operands }) => ({
+        operation,
+        operands: operands.map((operand) =>
+          operand > index ? operand - 1 : operand
+        ),
+      }));
+
+    setOps(newOps);
+    setNumQubits(numQubits - 1);
   };
 
   const handleDrop = () => {
-    if (clicked === null) return;
-    const opRendered = renderOps(ops, clicked);
-    setCiruit({
-      ...circuit,
-      ops: opRendered.map(({ operator, operands, key }) => {
+    if (dragged === null) return;
+    const opRendered = renderOps(ops, dragged, numQubits, dimension);
+    setOps(
+      opRendered.map(({ operator, operands, key }) => {
         if (key !== 0) return { operator, operands, key };
         return {
-          operator: operator.substr(0, operator.length - 4),
+          operator,
           operands,
           key: opKeyGenerator(),
         };
-      }),
-    });
-    setClicked(null);
-  };
-
-  const handleDrag = (key, kind, x, y) => {
-    props.handleDrag(kind, x, y);
-    setCiruit({ ...circuit, ops: ops.filter((op) => op.key !== key) });
+      })
+    );
   };
 
   useEffect(() => {
@@ -162,116 +47,20 @@ function Circuit(props) {
     return () => document.removeEventListener("mouseup", handleDrop);
   });
 
-  const { width, height } = dimension;
-
-  const renderOps = (operations, dragged) => {
-    const nextX = Array(qubitKeys.length).fill(0);
-    // First sort gate for drop implementation
-    let opRendered = [];
-    operations.forEach((op) => {
-      const { operands } = op;
-      const minOperand = Math.min(...operands);
-      const maxOperand = Math.max(...operands);
-      let drawX = 0;
-      for (let i = minOperand; i <= maxOperand; i += 1) {
-        drawX = Math.max(drawX, nextX[i]);
-      }
-
-      for (let i = minOperand; i <= maxOperand; i += 1) {
-        nextX[i] = drawX + 1;
-      }
-      opRendered.push({ ...op, drawX });
-    });
-    opRendered.sort((gate1, gate2) => gate1.drawX - gate2.drawX);
-
-    let dropI = null;
-    let dropJ = null;
-
-    let dropRendered = true;
-    if (dragged) {
-      let { x, y } = dragged;
-      y -= dimension.top;
-      x -= dimension.left;
-
-      const airity = getArity(dragged.kind);
-      if (y >= 0) {
-        dropI = Math.ceil(Math.max(y - START_Y - SPACE_Y / 2, 0) / SPACE_Y);
-      }
-      if (dropI !== null && dropI + airity <= qubitKeys.length) {
-        dropJ = Math.ceil(Math.max(x - START_X - SPACE_X / 2, 0) / SPACE_X);
-      }
-      if (dropJ !== null) dropRendered = false;
-    }
-
-    // Insert drop point
-    const opAndDropRendered = [];
-    if (!dropRendered) {
-      nextX.fill(0);
-      const airity = getArity(dragged.kind);
-
-      opRendered.forEach((op) => {
-        const { operands } = op;
-        const minOperand = Math.min(...operands);
-        const maxOperand = Math.max(...operands);
-
-        let drawX = 0;
-
-        for (let i = minOperand; i <= maxOperand; i += 1) {
-          drawX = Math.max(drawX, nextX[i]);
-        }
-        if (
-          !dropRendered &&
-          drawX >= dropJ &&
-          minOperand <= dropI + airity - 1 &&
-          dropI <= maxOperand
-        ) {
-          let dropX = 0;
-          for (let i = dropI; i < dropI + airity; i += 1) {
-            dropX = Math.max(dropX, nextX[i]);
-          }
-
-          opAndDropRendered.push({
-            operator: dragged.kind,
-            operands: [dropI, dropI + airity - 1],
-            key: 0,
-            drawX: dropX,
-          });
-          dropRendered = true;
-          for (let i = dropI; i < dropI + airity; i += 1) {
-            nextX[i] = dropX + 1;
-          }
-          if (dropX === drawX) drawX += 1;
-        }
-
-        opAndDropRendered.push({ ...op, drawX });
-        for (let i = minOperand; i <= maxOperand; i += 1) {
-          nextX[i] = drawX + 1;
-        }
-      });
-      if (!dropRendered) {
-        let dropX = 0;
-        for (let i = dropI; i < dropI + airity; i += 1) {
-          dropX = Math.max(dropX, nextX[i]);
-        }
-        opAndDropRendered.push({
-          operator: dragged.kind,
-          operands: [dropI, dropI + airity - 1],
-          key: 0,
-          drawX: dropX,
-        });
-      }
-      opRendered = opAndDropRendered;
-    }
-    return opRendered;
+  const handleDrag = (key, operation, x, y) => {
+    props.handleDrag(operation, x, y);
+    setOps(ops.filter((op) => op.key !== key));
   };
 
-  const opRendered = renderOps(ops, clicked);
+  const { width, height } = dimension;
+
+  const opRendered = renderOps(ops, dragged, numQubits, dimension);
 
   return (
     <div className="w-full h-1/2 border-b-2 border-t-2 overflow-auto" ref={ref}>
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
-        {qubitKeys.map((key, index) => {
-          const level = START_Y + SPACE_Y * index;
+        {[...Array(numQubits).keys()].map((key) => {
+          const level = START_Y + SPACE_Y * key;
           return (
             <g key={key} transform={`translate(0,${level})`}>
               <g transform="translate(0,-5)">
@@ -283,7 +72,7 @@ function Circuit(props) {
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
-                  onClick={() => deleteQubit(index)}
+                  onClick={() => deleteQubit(key)}
                 >
                   <path
                     strokeLinecap="round"
@@ -316,17 +105,16 @@ function Circuit(props) {
               operator={operator}
               operands={operands}
               handleMouseDown={(kind, x, y) => handleDrag(key, kind, x, y)}
-              gates={circuit.ops}
-              setGates={(gates) => {
-                setCiruit({ ...circuit, ops: gates });
-              }}
+              gates={ops}
+              setGates={setOps}
               id={key}
               left={dimension.left}
               top={dimension.top}
+              numQubits={numQubits}
             />
           </g>
         ))}
-        <g transform={`translate(0, ${START_Y + qubitKeys.length * SPACE_Y})`}>
+        <g transform={`translate(0, ${START_Y + numQubits * SPACE_Y})`}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24px"
@@ -352,80 +140,114 @@ function Circuit(props) {
   );
 }
 
-Circuit.propTypes = {
-  circuit: PropTypes.object.isRequired,
-  setCiruit: PropTypes.func.isRequired,
-  clicked: PropTypes.object,
-  setClicked: PropTypes.func.isRequired,
-  handleDrag: PropTypes.func.isRequired,
-};
+function renderOps(ops, dragged, numQubits, dimension) {
+  const nextX = Array(numQubits).fill(0);
+  // First sort gate for drop implementation
+  let opRendered = [];
+  ops.forEach((op) => {
+    const { operands } = op;
+    const minOperand = Math.min(...operands);
+    const maxOperand = Math.max(...operands);
+    let drawX = 0;
+    for (let i = minOperand; i <= maxOperand; i += 1) {
+      drawX = Math.max(drawX, nextX[i]);
+    }
 
-Circuit.defaultProps = {
-  clicked: null,
-};
+    for (let i = minOperand; i <= maxOperand; i += 1) {
+      nextX[i] = drawX + 1;
+    }
+    opRendered.push({ ...op, drawX });
+  });
+  opRendered.sort((gate1, gate2) => gate1.drawX - gate2.drawX);
 
-function GatePannel(props) {
-  const { handleDrag } = props;
-  return (
-    <div className="flex flex-row bo">
-      {GATES.map((operator) => (
-        <button
-          type="button"
-          key={operator}
-          className="gate"
-          onMouseDown={(event) => {
-            handleDrag(operator, event.pageX, event.pageY);
-          }}
-        >
-          {operator[0]}
-        </button>
-      ))}
-    </div>
-  );
+  let dropI = null;
+  let dropJ = null;
+
+  let dropRendered = true;
+  if (dragged) {
+    let { x, y } = dragged;
+    const { op } = dragged;
+    y -= dimension.top;
+    x -= dimension.left;
+
+    const airity = Math.max(...op.operands) - Math.min(...op.operands) + 1;
+    if (y >= 0) {
+      dropI = Math.ceil(Math.max(y - START_Y - SPACE_Y / 2, 0) / SPACE_Y);
+    }
+    if (dropI !== null && dropI + airity <= numQubits) {
+      dropJ = Math.ceil(Math.max(x - START_X - SPACE_X / 2, 0) / SPACE_X);
+    }
+    if (dropJ !== null) dropRendered = false;
+  }
+
+  // Insert drop point
+  const opAndDropRendered = [];
+  if (!dropRendered) {
+    nextX.fill(0);
+    const airity = getArity(dragged.op.operator);
+
+    opRendered.forEach((op) => {
+      const { operands } = op;
+      const minOperand = Math.min(...operands);
+      const maxOperand = Math.max(...operands);
+
+      let drawX = 0;
+
+      for (let i = minOperand; i <= maxOperand; i += 1) {
+        drawX = Math.max(drawX, nextX[i]);
+      }
+      if (
+        !dropRendered &&
+        drawX >= dropJ &&
+        minOperand <= dropI + airity - 1 &&
+        dropI <= maxOperand
+      ) {
+        let dropX = 0;
+        for (let i = dropI; i < dropI + airity; i += 1) {
+          dropX = Math.max(dropX, nextX[i]);
+        }
+
+        opAndDropRendered.push({
+          operator: dragged.op.operator,
+          operands: dragged.op.operands.map((operand) => operand + dropI),
+          key: 0,
+          drawX: dropX,
+        });
+        dropRendered = true;
+        for (let i = dropI; i < dropI + airity; i += 1) {
+          nextX[i] = dropX + 1;
+        }
+        if (dropX === drawX) drawX += 1;
+      }
+
+      opAndDropRendered.push({ ...op, drawX });
+      for (let i = minOperand; i <= maxOperand; i += 1) {
+        nextX[i] = drawX + 1;
+      }
+    });
+    if (!dropRendered) {
+      let dropX = 0;
+      for (let i = dropI; i < dropI + airity; i += 1) {
+        dropX = Math.max(dropX, nextX[i]);
+      }
+      opAndDropRendered.push({
+        operator: dragged.op.operator,
+        operands: dragged.op.operands.map((operand) => operand + dropI),
+        key: 0,
+        drawX: dropX,
+      });
+    }
+    opRendered = opAndDropRendered;
+  }
+  return opRendered;
 }
 
-GatePannel.propTypes = {
-  handleDrag: PropTypes.func.isRequired,
-};
+const opKeyGenerator = keyGenerator(1);
 
-function Menu() {
-  return (
-    <div className="border-b-2 flex flex-row">
-      <button type="button" className="menu">
-        File
-      </button>
-      <button type="button" className="menu">
-        Edit
-      </button>
-      <button type="button" className="menu">
-        Inspect
-      </button>
-      <button type="button" className="menu">
-        View
-      </button>
-      <button type="button" className="menu">
-        Share
-      </button>
-      <div />
-    </div>
-  );
-}
-
-function Title() {
-  return (
-    <form className="border-b-2">
-      <input type="text" defaultValue="Untitled circuit" className="p-2" />
-    </form>
-  );
-}
-
-function keyGenGenerator(inital) {
-  let count = inital;
+function keyGenerator(initialKey) {
+  let key = initialKey;
   return () => {
-    count += 1;
-    return count - 1;
+    key += 1;
+    return key - 1;
   };
 }
-
-const qubitKeyGenerator = keyGenGenerator(3);
-const opKeyGenerator = keyGenGenerator(2);

@@ -13,8 +13,10 @@ export function QuantumGate(props) {
     id,
     left,
     top,
+    numQubits,
   } = props;
-  if (operator.endsWith("NULL")) {
+  if (id === 0) {
+    // drop point
     return <NULLGate operands={operands} />;
   }
   switch (operator) {
@@ -25,12 +27,12 @@ export function QuantumGate(props) {
     case "M":
       return (
         <SingleQubitGate
-          kind={operator}
+          operator={operator}
           operands={operands}
           handleMouseDown={handleMouseDown}
         />
       );
-    case "CNOT":
+    case "CX":
       return (
         <CNotGate
           operands={operands}
@@ -39,6 +41,7 @@ export function QuantumGate(props) {
           setGates={setGates}
           id={id}
           top={top}
+          numQubits={numQubits}
         />
       );
     default:
@@ -55,10 +58,11 @@ QuantumGate.propTypes = {
   handleMouseDown: PropTypes.func.isRequired,
   left: PropTypes.number.isRequired,
   top: PropTypes.number.isRequired,
+  numQubits: PropTypes.number.isRequired,
 };
 
 function SingleQubitGate(props) {
-  const { operands, kind, handleMouseDown } = props;
+  const { operands, operator, handleMouseDown } = props;
   const [operand] = operands;
   const y = operand * SPACE_Y + START_Y - 10;
   return (
@@ -68,7 +72,9 @@ function SingleQubitGate(props) {
         width={SIZE + 4}
         height={SIZE + 4}
         className="cursor-pointer"
-        onMouseDown={(event) => handleMouseDown(kind, event.pageX, event.pageY)}
+        onMouseDown={(event) =>
+          handleMouseDown({ operator, operands: [0] }, event.pageX, event.pageY)
+        }
       >
         <rect
           x={0}
@@ -86,7 +92,7 @@ function SingleQubitGate(props) {
           fontSize="12px"
           fontWeight="800"
         >
-          {kind}
+          {operator}
         </text>
       </svg>
     </g>
@@ -95,12 +101,12 @@ function SingleQubitGate(props) {
 
 SingleQubitGate.propTypes = {
   operands: PropTypes.array.isRequired,
-  kind: PropTypes.string.isRequired,
+  operator: PropTypes.string.isRequired,
   handleMouseDown: PropTypes.func.isRequired,
 };
 
 function CNotGate(props) {
-  const { operands, gates, setGates, id, top } = props;
+  const { operands, gates, setGates, id, top, numQubits } = props;
   let [cer, ced] = operands;
   const start = Math.min(cer, ced);
   const end = Math.max(cer, ced);
@@ -121,7 +127,11 @@ function CNotGate(props) {
         height={SIZE + height * SPACE_Y + 4}
         className="cursor-pointer"
         onMouseDown={(event) =>
-          props.handleMouseDown("CNOT", event.pageX, event.pageY)
+          props.handleMouseDown(
+            { operator: "CX", operands: [cer, ced] },
+            event.pageX,
+            event.pageY
+          )
         }
       >
         <rect
@@ -142,6 +152,12 @@ function CNotGate(props) {
                 const i = Math.ceil(
                   Math.max(y - START_Y - SPACE_Y / 2, 0) / SPACE_Y
                 );
+
+                const needUpdate =
+                  i < numQubits &&
+                  !(gates.filter(({ key }) => key === id)[0].operands[1] === i);
+
+                if (!needUpdate) return;
 
                 setGates(
                   gates.map((gate) => {
@@ -212,13 +228,13 @@ CNotGate.propTypes = {
   handleMouseDown: PropTypes.func.isRequired,
   id: PropTypes.number.isRequired,
   top: PropTypes.number.isRequired,
+  numQubits: PropTypes.number.isRequired,
 };
 
 function NULLGate(props) {
   const { operands } = props;
-  const [cer, ced] = operands;
-  const start = Math.min(cer, ced);
-  const end = Math.max(cer, ced);
+  const start = Math.min(...operands);
+  const end = Math.max(...operands);
   const height = end - start;
   return (
     <g transform={`translate(0, ${start * SPACE_Y + START_Y - 10})`}>
@@ -248,11 +264,10 @@ NULLGate.propTypes = {
 };
 
 export function getArity(operator) {
-  const op = operator.substr(0, operator.length - 4);
-  if (op === "CNOT") {
+  if (operator === "CX") {
     return 2;
   }
-  if (op === "TOFFOLI") {
+  if (operator === "TOFFOLI") {
     return 3;
   }
   return 1;
