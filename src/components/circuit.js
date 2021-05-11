@@ -15,9 +15,9 @@ export default function Circuit(props) {
 
   const deleteQubit = (index) => {
     const newOps = ops
-      .filter(({ operands }) => !operands.includes(index)) // remove operation involving deleted qubit
-      .map(({ operation, operands }) => ({
-        operation,
+      .filter((op) => !op.operands.includes(index)) // remove operation involving deleted qubit
+      .map(({ operator, operands }) => ({
+        operator,
         operands: operands.map((operand) =>
           operand > index ? operand - 1 : operand
         ),
