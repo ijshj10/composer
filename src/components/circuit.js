@@ -15,7 +15,7 @@ export default function Circuit(props) {
 
   const deleteQubit = (index) => {
     const newOps = ops
-      .filter(({ operands }) => !operands.include(index)) // remove operation involving deleted qubit
+      .filter(({ operands }) => !operands.includes(index)) // remove operation involving deleted qubit
       .map(({ operation, operands }) => ({
         operation,
         operands: operands.map((operand) =>
@@ -58,7 +58,14 @@ export default function Circuit(props) {
 
   return (
     <div className="w-full h-1/2 border-b-2 border-t-2 overflow-auto" ref={ref}>
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+      <svg
+        width={width}
+        height={Math.max(height - 4, 3 * START_X + SPACE_X * numQubits)}
+        viewBox={`0 0 ${width} ${Math.max(
+          height - 4,
+          2 * START_Y + SPACE_Y * numQubits
+        )}`}
+      >
         {[...Array(numQubits).keys()].map((key) => {
           const level = START_Y + SPACE_Y * key;
           return (
