@@ -72,9 +72,14 @@ function SingleQubitGate(props) {
         width={SIZE + 4}
         height={SIZE + 4}
         className="cursor-pointer"
-        onMouseDown={(event) =>
-          handleMouseDown({ operator, operands: [0] }, event.pageX, event.pageY)
-        }
+        onMouseDown={(event) => {
+          event.preventDefault();
+          handleMouseDown(
+            { operator, operands: [0] },
+            event.pageX,
+            event.pageY
+          );
+        }}
       >
         <rect
           x={0}
@@ -126,13 +131,14 @@ function CNotGate(props) {
         width={SIZE + 4}
         height={SIZE + height * SPACE_Y + 4}
         className="cursor-pointer"
-        onMouseDown={(event) =>
+        onMouseDown={(event) => {
+          event.preventDefault();
           props.handleMouseDown(
             { operator: "CX", operands: [cer, ced] },
             event.pageX,
             event.pageY
-          )
-        }
+          );
+        }}
       >
         <rect
           x={0}
@@ -147,6 +153,8 @@ function CNotGate(props) {
         <g>
           <svg
             onMouseDown={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
               const handleMouseMove = (e) => {
                 const y = e.clientY - top;
                 const i = Math.ceil(
@@ -172,7 +180,6 @@ function CNotGate(props) {
               };
               document.addEventListener("mousemove", handleMouseMove);
               document.addEventListener("mouseup", handleMouseUp);
-              event.stopPropagation();
             }}
           >
             <circle r={5} cx={SIZE / 2} cy={cer * SPACE_Y + SIZE / 2 - 3} />

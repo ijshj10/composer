@@ -40,9 +40,9 @@ export default function Composer() {
     fetch("/api/", {
       method: "POST",
       headers: {
-        "Content-Type": "text/plain",
+        "Content-Type": "application/json",
       },
-      body: code,
+      body: JSON.stringify({ code }),
     }).then((response) => {
       response.text().then((text) => {
         setResult(text);
