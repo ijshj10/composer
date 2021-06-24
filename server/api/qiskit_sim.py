@@ -1,11 +1,12 @@
 from qiskit import *
 from qiskit.visualization import plot_histogram
 from qiskit.tools.monitor import job_monitor
+from qiskit.qasm import OpenQASMLexer
 import matplotlib.pyplot as plt
 import base64
 
 
-def run(circuit):
+def run(circuit, type='qasm2'):
     qc = QuantumCircuit(len(circuit["qubitKeys"]))
 
     for op in circuit["ops"]:
