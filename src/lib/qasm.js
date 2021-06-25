@@ -1,7 +1,8 @@
 import QuantumCircuit from "quantum-circuit";
 
-export default function parse(code, errorCallback) {
+export default function run(code, errorCallback) {
   const qc = new QuantumCircuit();
   qc.importQASM(code, errorCallback);
-  return qc;
+  qc.run();
+  return qc.measureAllMultishot(1024);
 }

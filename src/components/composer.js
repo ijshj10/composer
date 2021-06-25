@@ -4,18 +4,19 @@
 /* eslint-disable jsx-a11y/control-has-associated-label */
 /* eslint-disable no-use-before-define */
 /* eslint-disable react/forbid-prop-types */
-import React, { useState, useEffect, useRef, Fragment } from "react";
+import React, { useState, useEffect, useRef, Fragment, useMemo } from "react";
 import PropTypes from "prop-types";
 import CodeFlask from "codeflask";
 import { Menu, Transition } from "@headlessui/react";
 import { ChevronDownIcon } from "@heroicons/react/solid";
+import Plot from "react-plotly.js";
 
 import { GATES } from "../constants";
 import { getArity } from "./gates";
 import Sidebar from "./sidebar";
 import Circuit from "./circuit";
-import parse from "../lib/qasm";
 import generateCode from "../lib/language";
+import Qasm from "../lib/qasm";
 
 export default function Composer() {
   const [dragged, setDragged] = useState(null);
@@ -48,6 +49,10 @@ export default function Composer() {
   const [result, setResult] = useState(null);
 
   const runSimulation = () => {
+    const newResult = Qasm(code);
+    console.log(newResult);
+    setResult(newResult);
+    /*
     fetch("/api/", {
       method: "POST",
       headers: {
@@ -58,7 +63,7 @@ export default function Composer() {
       response.text().then((text) => {
         setResult(text);
       });
-    });
+    }); */
   };
 
   const [language, setLanguage] = useState("OPENQASM 2.0");
@@ -97,7 +102,7 @@ export default function Composer() {
                 setNumQubits={setNumQubits}
               />
               <div className="w-1/2 align-middle flex items-center justify-center">
-                <img src={`data:image/png;base64, ${result}`} alt="" />
+                {result && <MyChart result={result} />}
               </div>
             </div>
             <div className="w-2/6 ml-4">
@@ -218,7 +223,7 @@ function Editor({ code, language, setLanguage }) {
                 >
                   <div className="py-1">
                     {languages.map((lang) => (
-                      <Menu.Item>
+                      <Menu.Item key={lang}>
                         {({ active }) => (
                           // eslint-disable-next-line jsx-a11y/no-static-element-interactions
                           <a
@@ -257,4 +262,23 @@ Editor.propTypes = {
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
+}
+
+function MyChart({ result }) {
+  let xs = [];
+  let ys = [];
+  Object.entries(result).forEach((entry) => {
+    xs = xs.concat(parseInt(entry[0], 2));
+    ys = ys.concat(entry[1]);
+  });
+
+  const data = { type: "bar", x: xs, y: ys };
+
+  console.log(data);
+
+  return (
+    <div className="w-full h-full">
+      <Plot data={[data]} />
+    </div>
+  );
 }
