@@ -1,13 +1,36 @@
 /* eslint-disable no-use-before-define */
 /* eslint-disable react/prop-types */
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { START_X, START_Y, SPACE_X, SPACE_Y } from "../constants";
 import useDimension from "../hooks/useDimension";
 import { getArity, QuantumGate } from "./gates";
+import GatePanel from "./GatePanel";
 
-export default function Circuit(props) {
-  const { dragged, ops, setOps, numQubits, setNumQubits } = props;
+export default function CircuitContainer(props) {
+  const { ops, setOps, numQubits, setNumQubits } = props;
   const [dimension, ref] = useDimension();
+
+  /*
+  const handleDrag = (op, x, y) => {
+    setDragged({ op, x, y });
+    const handleMouseMove = (event) => {
+      setDragged({
+        op,
+        x: event.pageX,
+        y: event.pageY,
+      });
+    };
+    const handleDrop = () => {
+      setDragged(null);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleDrop);
+    };
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleDrop);
+  };
+  */
+
+  const [dragged, setDragged] = useState(null);
 
   const addQubit = () => {
     setNumQubits(numQubits + 1);
@@ -22,7 +45,6 @@ export default function Circuit(props) {
           operand > index ? operand - 1 : operand
         ),
       }));
-
     setOps(newOps);
     setNumQubits(numQubits - 1);
   };
@@ -42,6 +64,8 @@ export default function Circuit(props) {
     );
   };
 
+  const setDragged;
+
   useEffect(() => {
     document.addEventListener("mouseup", handleDrop);
     return () => document.removeEventListener("mouseup", handleDrop);
@@ -57,7 +81,10 @@ export default function Circuit(props) {
   const opRendered = renderOps(ops, dragged, numQubits, dimension);
 
   return (
-    <div className="w-full h-1/2 border-b-2 border-t-2 overflow-auto" ref={ref}>
+    <div className="w-full overflow-auto" ref={ref}>
+      <div className="border-b-2 py-1">
+        <GatePanel onMouseDown={handleClick} />
+      </div>
       <svg
         width={width}
         height={Math.max(height - 4, 3 * START_X + SPACE_X * numQubits)}

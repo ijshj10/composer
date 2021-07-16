@@ -9,8 +9,8 @@ export default function Header() {
   const history = useHistory();
   return (
     <header className="h-16 bg-white border-b border-gray">
-      <div className="flex justify-between h-full text-gray-500 ">
-        <div className="text-center flex items-center cursor-pointer pl-4 text-2xl hover:text-gray-900">
+      <div className="flex justify-between h-full text-gray-500">
+        <div className="ml-4 self-center cursor-pointer text-2xl hover:text-gray-900">
           <h1>
             <Link to="/">Ion trap</Link>
           </h1>

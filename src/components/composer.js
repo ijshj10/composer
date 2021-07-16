@@ -4,41 +4,18 @@
 /* eslint-disable jsx-a11y/control-has-associated-label */
 /* eslint-disable no-use-before-define */
 /* eslint-disable react/forbid-prop-types */
-import React, { useState, useEffect, useRef, Fragment, useMemo } from "react";
+import React, { useState, useEffect, useRef, Fragment } from "react";
 import PropTypes from "prop-types";
 import CodeFlask from "codeflask";
 import { Menu, Transition } from "@headlessui/react";
 import { ChevronDownIcon } from "@heroicons/react/solid";
 import Plot from "react-plotly.js";
 
-import { GATES } from "../constants";
-import { getArity } from "./gates";
 import Sidebar from "./sidebar";
-import Circuit from "./circuit";
-import generateCode from "../lib/language";
+import Circuit from "./Circuit";
 import Qasm from "../lib/qasm";
 
 export default function Composer() {
-  const [dragged, setDragged] = useState(null);
-
-  const handleDrag = (op, x, y) => {
-    setDragged({ op, x, y });
-    const handleMouseMove = (event) => {
-      setDragged({
-        op,
-        x: event.pageX,
-        y: event.pageY,
-      });
-    };
-    const handleDrop = () => {
-      setDragged(null);
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleDrop);
-    };
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleDrop);
-  };
-
   const [numQubits, setNumQubits] = useState(1);
   const [ops, setOps] = useState([]);
 
@@ -66,108 +43,23 @@ export default function Composer() {
     }); */
   };
 
-  const [language, setLanguage] = useState("OPENQASM 2.0");
-
-  useEffect(() => {
-    setCode(generateCode(numQubits, ops, language));
-  }, [numQubits, ops, language]);
-
   return (
     <>
-      {dragged !== null && (
-        <div
-          className="absolute gate"
-          style={{
-            top: dragged.y - 24,
-            left: dragged.x - 24,
-          }}
-        >
-          {dragged.op.operator[0]}
-        </div>
-      )}
-      <div className="flex flex-row flex-grow">
+      <div className="flex flex-row h-full">
         <Sidebar runSimulation={runSimulation} />
         <div className="flex flex-col space-y-0 flex-grow">
-          <Toolbar />
           <Title />
-          <div className="flex flex-row flex-grow">
-            <div className="flex flex-col border-r-2 flex-grow">
-              <GatePannel handleDrag={handleDrag} />
-              <Circuit
-                dragged={dragged}
-                handleDrag={handleDrag}
-                ops={ops}
-                setOps={setOps}
-                numQubits={numQubits}
-                setNumQubits={setNumQubits}
-              />
-              <div className="w-1/2 align-middle flex items-center justify-center">
-                {result && <MyChart result={result} />}
-              </div>
-            </div>
-            <div className="w-2/6 ml-4">
-              <Editor
-                code={code}
-                setCode={setCode}
-                language={language}
-                setLanguage={setLanguage}
-              />
-            </div>
+          <div className="border-r-2 h-full">
+            <Circuit
+              ops={ops}
+              setOps={setOps}
+              numQubits={numQubits}
+              setNumQubits={setNumQubits}
+            />
           </div>
         </div>
       </div>
     </>
-  );
-}
-
-function GatePannel(props) {
-  const { handleDrag } = props;
-  return (
-    <div className="flex flex-row bo">
-      {GATES.map((operator) => (
-        <button
-          type="button"
-          key={operator}
-          className="gate"
-          onMouseDown={(event) => {
-            handleDrag(
-              { operator, operands: [...Array(getArity(operator)).keys()] },
-              event.pageX,
-              event.pageY
-            );
-          }}
-        >
-          {operator[0]}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-GatePannel.propTypes = {
-  handleDrag: PropTypes.func.isRequired,
-};
-
-function Toolbar() {
-  return (
-    <div className="border-b-2 flex flex-row">
-      <button type="button" className="menu">
-        File
-      </button>
-      <button type="button" className="menu">
-        Edit
-      </button>
-      <button type="button" className="menu">
-        Inspect
-      </button>
-      <button type="button" className="menu">
-        View
-      </button>
-      <button type="button" className="menu">
-        Share
-      </button>
-      <div />
-    </div>
   );
 }
 

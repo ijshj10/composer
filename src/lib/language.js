@@ -1,6 +1,6 @@
 function generateOpenQASM(numQubits, ops) {
   let newCode = 'OPENQASM 2.0;\ninclude "qelib1.inc";\n\n';
-  newCode += `qreg q[${numQubits}];\ncreg q[${numQubits}];\n\n`;
+  newCode += `qreg q[${numQubits}];\ncreg c[${numQubits}];\n\n`;
   ops.forEach((op) => {
     switch (op.operator) {
       case "CX":
