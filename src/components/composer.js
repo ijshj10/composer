@@ -47,10 +47,14 @@ export default function Composer() {
   );
 
   const [result, setResult] = useState(null);
+  const [isLoading, setIsLoafing] = useState(false);
 
   const runSimulation = () => {
     const newResult = Qasm(code);
+    setIsLoafing(true);
     console.log(newResult);
+    /*
+     */
     setResult(newResult);
     /*
     fetch("/api/", {
@@ -102,7 +106,16 @@ export default function Composer() {
                 setNumQubits={setNumQubits}
               />
               <div className="w-1/2 align-middle flex items-center justify-center">
-                {result && <MyChart result={result} />}
+                {isLoading ? (
+                  <div className="text-5xl">
+                    Running...
+                    <button type="button" onClick={() => setIsLoafing(false)}>
+                      <i className="material-icons-outlined">replay</i>
+                    </button>
+                  </div>
+                ) : (
+                  result && <MyChart result={result} />
+                )}
               </div>
             </div>
             <div className="w-2/6 ml-4">
