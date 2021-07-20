@@ -1,3 +1,4 @@
+/* eslint-disable no-nested-ternary */
 /* eslint-disable react/prop-types */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable jsx-a11y/anchor-is-valid */
@@ -42,32 +43,54 @@ export default function Composer() {
   const [numQubits, setNumQubits] = useState(1);
   const [ops, setOps] = useState([]);
 
+  const [experimentId, setExperimentId] = useState();
+  const [experimentError, setExperimentError] = useState(null);
+
   const [code, setCode] = useState(
     'OPENQASM 2.0;\ninclude "qelib1.inc";\n\nqreg q[3];\ncreg q[3];\n'
   );
 
   const [result, setResult] = useState(null);
-  const [isLoading, setIsLoafing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const runSimulation = () => {
     const newResult = Qasm(code);
-    setIsLoafing(true);
     console.log(newResult);
-    /*
-     */
     setResult(newResult);
-    /*
-    fetch("/api/", {
+  };
+
+  const runExperiment = () => {
+    const payload = JSON.stringify({ numQubits, ops });
+    console.log(payload);
+
+    fetch("/api/experiments", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ code }),
-    }).then((response) => {
-      response.text().then((text) => {
-        setResult(text);
+      body: payload,
+    })
+      .then((response) => {
+        response.text().then((text) => {
+          setExperimentId(JSON.parse(text).id);
+          setIsLoading(true);
+        });
+      })
+      .catch((err) => {
+        setExperimentError(err);
       });
-    }); */
+  };
+
+  const checkExperiment = () => {
+    fetch(`/api/experiments/${experimentId}`).then((response) => {
+      response.text().then((text) => {
+        const experiemntResult = JSON.parse(text);
+        if (experiemntResult.done) {
+          setResult(experiemntResult.result);
+          setIsLoading(false);
+        }
+      });
+    });
   };
 
   const [language, setLanguage] = useState("OPENQASM 2.0");
@@ -90,7 +113,7 @@ export default function Composer() {
         </div>
       )}
       <div className="flex flex-row flex-grow">
-        <Sidebar runSimulation={runSimulation} />
+        <Sidebar runSimulation={runSimulation} runExperiment={runExperiment} />
         <div className="flex flex-col space-y-0 flex-grow">
           <Toolbar />
           <Title />
@@ -109,10 +132,12 @@ export default function Composer() {
                 {isLoading ? (
                   <div className="text-5xl">
                     Running...
-                    <button type="button" onClick={() => setIsLoafing(false)}>
+                    <button type="button" onClick={checkExperiment}>
                       <i className="material-icons-outlined">replay</i>
                     </button>
                   </div>
+                ) : experimentError ? (
+                  <p>{experimentError}</p>
                 ) : (
                   result && <MyChart result={result} />
                 )}
@@ -280,6 +305,7 @@ function classNames(...classes) {
 function MyChart({ result }) {
   let xs = [];
   let ys = [];
+  console.log(result);
   Object.entries(result).forEach((entry) => {
     xs = xs.concat(parseInt(entry[0], 2));
     ys = ys.concat(entry[1]);
