@@ -12,7 +12,8 @@ CORS(app)
 @app.route('/api/', methods=["POST", "GET"])
 def hello():
     if request.method == 'POST':
-        run(request.json['code'], type='qasm2')
+        result = run(request.json)
+        return result, 200
     return 'hello'
 
 if __name__ == '__main__':
