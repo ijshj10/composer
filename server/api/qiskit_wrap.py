@@ -49,7 +49,7 @@ def _convert_circuit(circuit):
             qc.x(op['operands'][0])
         elif op['operator'] == 'Y':
             qc.y(op['operands'][0])
-        elif op['operator'] == 'X':
+        elif op['operator'] == 'Z':
             qc.z(op['operands'][0])
 
     for i in range(numQubits):
