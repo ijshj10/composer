@@ -20,7 +20,7 @@ const useBbox = () => {
     set();
     window.addEventListener("resize", set);
     return () => window.removeEventListener("resize", set);
-  }, []);
+  }, [ref.current]);
 
   return [bbox, ref];
 };
