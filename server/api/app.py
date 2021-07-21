@@ -3,7 +3,7 @@ import sys, os
 from flask import Flask
 from flask import request, Response
 from flask_cors import CORS
-from api.qiskit_wrap import run
+from api import qiskit_wrap
 
 
 app = Flask(__name__)
@@ -18,7 +18,7 @@ def add_experiment():
     experiments.append({"done": False})
 
     # This code should run in background
-    result = run(request.json)
+    result = qiskit_wrap.run_sim(request.json)
     experiments[-1]["result"] = result
     experiments[-1]["done"] = True
 
