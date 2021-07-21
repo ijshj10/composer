@@ -12,11 +12,11 @@ def run(circuit, type='qasm2'):
         if op['operator'] == 'H':
             qc.h(op['operands'][0])
         elif op['operator'] == 'X':
-            qc.x(op['operands'[0]])
+            qc.x(op['operands'][0])
         elif op['operator'] == 'Y':
-            qc.y(op['operands'[0]])
+            qc.y(op['operands'][0])
         elif op['operator'] == 'X':
-            qc.z(op['operands'[0]])
+            qc.z(op['operands'][0])
 
     for i in range(numQubits):
         qc.measure(i, i)
