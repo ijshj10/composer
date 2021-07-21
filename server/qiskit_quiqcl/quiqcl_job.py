@@ -113,7 +113,9 @@ class QuiqclJob(providers.JobV1):
         job_state = self._client.retrieve_job(self.job_id())
         self._status = jobstatus.JobStatus[job_state['status']]
         if self._status in jobstatus.JOB_FINAL_STATES:
-            self._result = self._format_result(job_state['result'])
+            self._result = job_state['result']
+            if self._result is not None:
+                self._result = self._format_result(self._result)
             self._error = job_state['error']
 
         return self._status
