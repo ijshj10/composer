@@ -1,11 +1,11 @@
-from qiskit import *
-
 import sys
+
+import qiskit
 
 
 def run(circuit, type='qasm2'):
     numQubits = circuit['numQubits']
-    qc = QuantumCircuit(numQubits, numQubits)
+    qc = qiskit.QuantumCircuit(numQubits, numQubits)
     print(circuit, file=sys.stderr)
 
     for op in circuit["ops"]:
@@ -21,8 +21,8 @@ def run(circuit, type='qasm2'):
     for i in range(numQubits):
         qc.measure(i, i)
 
-    backend = BasicAer.get_backend('qasm_simulator')
-    result = execute(qc, backend, shots=1000).result()
+    backend = qiskit.BasicAer.get_backend('qasm_simulator')
+    result = qiskit.execute(qc, backend, shots=1000).result()
     counts = result.get_counts(qc)
 
     return counts
