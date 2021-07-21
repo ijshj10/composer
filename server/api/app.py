@@ -10,6 +10,7 @@ app = Flask(__name__)
 CORS(app)
 
 experiments = []
+jobs = []
 
 # Submit experiment
 # Client get experiment id for result retrieve
@@ -18,15 +19,17 @@ def add_experiment():
     experiments.append({"done": False})
 
     # This code should run in background
-    result = qiskit_wrap.run_sim(request.json)
-    experiments[-1]["result"] = result
-    experiments[-1]["done"] = True
+    job = qiskit_wrap.run_blade_trap(request.json)
+    jobs.append(job)
 
     return {"id": len(experiments) -1 }, 200
 
 @app.route('/api/experiments/<int:id>', methods=["GET"])
 def get_experiment(id):
-    return experiments[id]
+    exp = experiments[id]
+    job = jobs[id]
+    qiskit_wrap.update_status(exp, job)
+    return exp
 
 if __name__ == '__main__':
     app.run()
