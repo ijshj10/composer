@@ -92,11 +92,20 @@ export default function Composer() {
   const checkExperiment = () => {
     fetch(`/api/experiments/${experimentId}`)
       .then((response) => {
+        if (!response.ok) {
+          setExperimentError("Something went wrong...");
+          setIsLoading(false);
+          return;
+        }
         response.text().then((text) => {
-          const experiemntResult = JSON.parse(text);
-          if (experiemntResult.done) {
-            setResult(experiemntResult.result);
-            setIsLoading(false);
+          try {
+            const experiemntResult = JSON.parse(text);
+            if (experiemntResult.done) {
+              setResult(experiemntResult.result);
+              setIsLoading(false);
+            }
+          } catch (err) {
+            setExperimentError(`Something went wrong...: ${err.message}`);
           }
         });
       })
@@ -150,7 +159,7 @@ export default function Composer() {
                     </button>
                   </div>
                 ) : experimentError ? (
-                  <div className="text-3xl">{experimentError}</div>
+                  <div className="text-3xl text-red-500">{experimentError}</div>
                 ) : (
                   result && <MyChart result={result} />
                 )}
