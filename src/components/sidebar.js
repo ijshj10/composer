@@ -1,11 +1,14 @@
+/* eslint-disable jsx-a11y/no-static-element-interactions */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
 import React, { useState, useContext } from "react";
 import PropTypes from "prop-types";
 import UserContext from "../context/user";
 
 const SELECTED_COLOR = "bg-gray-200 ";
 
-export default function Sidebar() {
+export default function Sidebar(props) {
   const [clicked, setClicked] = useState(-1);
+  const { runSimulation, runExperiment } = props;
 
   const handleClick = (newClicked) => {
     if (clicked === newClicked) {
@@ -30,10 +33,21 @@ export default function Sidebar() {
           </button>
         ))}
       </div>
-      {clicked !== -1 && <SidebarOpened kind={clicked} />}
+      {clicked !== -1 && (
+        <SidebarOpened
+          kind={clicked}
+          runSimulation={runSimulation}
+          runExperiment={runExperiment}
+        />
+      )}
     </div>
   );
 }
+
+Sidebar.propTypes = {
+  runSimulation: PropTypes.func.isRequired,
+  runExperiment: PropTypes.func.isRequired,
+};
 
 function SidebarOpened(props) {
   const { user: loggedInUser } = useContext(UserContext);
@@ -45,8 +59,14 @@ function SidebarOpened(props) {
       {title[kind] === "Run circuit" && (
         <div>
           <div
-            className="h-16 rounded-md bg-gray-700 text-white flex items-center justify-center text-2xl font-extrabold mb-4 cursor-not-allowed select-none opacity-50"
-            title="Not implemented"
+            type="button"
+            className={`h-16 rounded-md bg-gray-700 text-white flex items-center justify-center text-2xl font-extrabold select-none w-full mb-2 ${
+              loggedInUser ? "cursor-pointer" : "opacity-50 cursor-not-allowed"
+            }`}
+            title={loggedInUser ? "" : "Need to login"}
+            onClick={() => {
+              if (loggedInUser) props.runExperiment();
+            }}
           >
             Run on hardware
           </div>
@@ -73,6 +93,5 @@ function SidebarOpened(props) {
 SidebarOpened.propTypes = {
   kind: PropTypes.number.isRequired,
   runSimulation: PropTypes.func.isRequired,
+  runExperiment: PropTypes.func.isRequired,
 };
-
-export { Sidebar };
