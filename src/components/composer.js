@@ -54,6 +54,8 @@ export default function Composer() {
   const [isLoading, setIsLoading] = useState(false);
 
   const runSimulation = () => {
+    setExperimentError(null);
+
     const newResult = Qasm(code);
     console.log(newResult);
     setResult(newResult);
@@ -62,6 +64,7 @@ export default function Composer() {
   const runExperiment = () => {
     const payload = JSON.stringify({ numQubits, ops });
     console.log(payload);
+    setExperimentError(null);
 
     fetch("/api/experiments", {
       method: "POST",
@@ -72,25 +75,35 @@ export default function Composer() {
     })
       .then((response) => {
         response.text().then((text) => {
-          setExperimentId(JSON.parse(text).id);
-          setIsLoading(true);
+          try {
+            setExperimentId(JSON.parse(text).id);
+            setIsLoading(true);
+          } catch (err) {
+            setExperimentError("Something went wrong...");
+          }
         });
       })
       .catch((err) => {
-        setExperimentError(err);
+        setExperimentError(err.message);
+        setIsLoading(false);
       });
   };
 
   const checkExperiment = () => {
-    fetch(`/api/experiments/${experimentId}`).then((response) => {
-      response.text().then((text) => {
-        const experiemntResult = JSON.parse(text);
-        if (experiemntResult.done) {
-          setResult(experiemntResult.result);
-          setIsLoading(false);
-        }
+    fetch(`/api/experiments/${experimentId}`)
+      .then((response) => {
+        response.text().then((text) => {
+          const experiemntResult = JSON.parse(text);
+          if (experiemntResult.done) {
+            setResult(experiemntResult.result);
+            setIsLoading(false);
+          }
+        });
+      })
+      .catch((err) => {
+        setExperimentError(err.message);
+        setIsLoading(false);
       });
-    });
   };
 
   const [language, setLanguage] = useState("OPENQASM 2.0");
@@ -137,7 +150,7 @@ export default function Composer() {
                     </button>
                   </div>
                 ) : experimentError ? (
-                  <p>{experimentError}</p>
+                  <div className="text-3xl">{experimentError}</div>
                 ) : (
                   result && <MyChart result={result} />
                 )}
